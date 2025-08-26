@@ -257,6 +257,7 @@ section {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+    width: 100%;
 }
 
 /* Contact Buttons */
@@ -269,6 +270,8 @@ section {
     font-weight: var(--font-weight-medium);
     transition: all var(--transition-normal);
     border: 2px solid transparent;
+    width: 100%;
+    box-sizing: border-box;
     
     /* Ensure minimum touch target size */
     min-height: 60px;
@@ -553,6 +556,10 @@ section {
     
     /* Maintain consistent order regardless of language */
     flex-direction: row;
+    
+    /* Mobile-first: center on small screens */
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 .lang-btn {
@@ -598,6 +605,12 @@ section {
     .contact-form-section {
         padding: var(--space-8);
     }
+    
+    /* Ensure language selector stays centered on larger phones */
+    .language-selector {
+        min-width: 120px;
+        justify-content: center;
+    }
 }
 
 /* Tablets */
@@ -620,6 +633,12 @@ section {
     .footer-content {
         flex-direction: row;
         justify-content: space-between;
+        align-items: center;
+    }
+    
+    /* Ensure language selector aligns properly in desktop footer */
+    .language-selector {
+        flex-shrink: 0;
     }
 }
 
