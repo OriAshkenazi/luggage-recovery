@@ -320,11 +320,14 @@ strong {
     font-size: var(--font-size-3xl);
     margin-bottom: var(--space-4);
     font-weight: var(--font-weight-bold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .hero-title .emoji {
     display: inline-block;
-    margin-right: var(--space-2);
+    margin-inline-end: var(--space-2);
     font-size: 1.2em;
 }
 
@@ -413,9 +416,10 @@ section {
 }
 
 .contact-buttons {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-4);
+    grid-auto-rows: 1fr;
 }
 
 /* Contact Buttons - Mobile First */
@@ -432,6 +436,7 @@ section {
     /* Mobile touch optimization */
     min-height: 64px; /* Larger for mobile */
     width: 100%;
+    height: 100%;
     
     /* Improve tap responsiveness on mobile */
     -webkit-tap-highlight-color: transparent;
@@ -823,21 +828,13 @@ section {
     .hero-title {
         font-size: 3rem;
     }
-    
-    .contact-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--space-5);
-    }
-    
-    .contact-btn--primary,
-    .contact-btn--secondary {
-        grid-column: 1 / -1;
-    }
-    
     .footer-content {
         flex-direction: row;
         justify-content: space-between;
+    }
+
+    .contact-buttons {
+        gap: var(--space-5);
     }
 }
 
@@ -850,19 +847,9 @@ section {
     .main-content {
         padding: var(--space-16) var(--space-8);
     }
-    
+
     .contact-buttons {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .contact-btn--primary {
-        grid-column: 1 / -1;
-    }
-    
-    .contact-btn--secondary,
-    .contact-btn--tertiary,
-    .contact-btn--call {
-        grid-column: span 1;
     }
 }
 
@@ -936,17 +923,6 @@ section {
     text-align: center;
 }
 
-[dir="rtl"] .hero-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: row-reverse;
-}
-
-[dir="rtl"] .hero-title .emoji {
-    margin-right: 0;
-    margin-left: var(--space-2);
-}
 
 /* Section Titles - Always centered */
 [dir="rtl"] .section-title {
@@ -978,6 +954,7 @@ section {
     text-align: right;
     align-items: flex-end;
     direction: rtl; /* Only text direction is RTL */
+    width: 100%;
 }
 
 [dir="rtl"] .btn-title,
@@ -1090,10 +1067,6 @@ section {
 
 /* Desktop RTL Refinements */
 @media (min-width: 768px) {
-    [dir="rtl"] .contact-buttons {
-        align-items: center;
-    }
-    
     [dir="rtl"] .footer-content {
         flex-direction: row-reverse;
         justify-content: space-between;
