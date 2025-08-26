@@ -1,0 +1,36 @@
+{
+  "page": {
+    "title": "You Found My Luggage! 🧳 - Contact Ori"
+  },
+  "hero": {
+    "title": "You Found My Luggage!",
+    "subtitle": "Thank you for being honest and helpful! Please contact me using any method below:"
+  },
+  "contact": {
+    "title": "Contact Me",
+    "whatsapp": "WhatsApp",
+    "whatsapp_sub": "Fastest response",
+    "sms": "Send SMS",
+    "email": "Send Email"
+  },
+  "form": {
+    "title": "Send a Message",
+    "description": "If the above methods don't work, please fill out this form:",
+    "name": "Your Name",
+    "contact": "Your Phone/Email",
+    "contact_placeholder": "So I can contact you back",
+    "location": "Where did you find it?",
+    "location_placeholder": "Airport, hotel, street, etc.",
+    "message": "Message",
+    "message_placeholder": "Any additional details...",
+    "submit": "Send Message"
+  },
+  "thanks": {
+    "title": "Thank You! 🙏",
+    "message": "Your honesty in contacting me means a lot! Lost luggage can be stressful, and people like you make traveling better for everyone."
+  },
+  "footer": {
+    "system": "Lost Luggage Recovery System",
+    "github": "View on GitHub"
+  }
+}

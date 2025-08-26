@@ -689,6 +689,60 @@ section {
     }
 }
 
+/* RTL (Right-to-Left) support for Hebrew */
+[dir="rtl"] {
+    text-align: right;
+}
+
+[dir="rtl"] .hero-content,
+[dir="rtl"] .main-content,
+[dir="rtl"] .footer-content {
+    text-align: right;
+}
+
+[dir="rtl"] .contact-buttons {
+    text-align: right;
+}
+
+[dir="rtl"] .btn-text {
+    align-items: flex-end;
+}
+
+[dir="rtl"] .btn-icon {
+    margin-right: 0;
+    margin-left: var(--space-4);
+}
+
+[dir="rtl"] .form-group {
+    text-align: right;
+}
+
+[dir="rtl"] .form-label {
+    text-align: right;
+}
+
+[dir="rtl"] .form-input,
+[dir="rtl"] .form-textarea {
+    text-align: right;
+}
+
+[dir="rtl"] .form-submit {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .form-submit .btn-icon {
+    margin-left: 0;
+    margin-right: var(--space-2);
+}
+
+[dir="rtl"] .language-selector {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .footer-content {
+    flex-direction: row-reverse;
+}
+
 /* Dark mode support (for future implementation) */
 @media (prefers-color-scheme: dark) {
     :root {
