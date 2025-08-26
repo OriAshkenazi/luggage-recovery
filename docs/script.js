@@ -13,15 +13,12 @@
 
     // Configuration
     const CONFIG = {
-        FORM_ENDPOINT: 'https://formspree.io/f/xdknzpko',
+        FORM_ENDPOINT: 'https://formspree.io/f/YOUR_FORM_ID', // Replace with actual Formspree ID
+        ANALYTICS_ID: '', // Optional: Add analytics ID
         DEFAULT_LANG: 'en',
         SUPPORTED_LANGUAGES: ['en', 'he'],
         STORAGE_KEY: 'luggage_recovery_preferences'
     };
-
-    // Translation cache
-    let translations = {};
-    let currentLanguage = CONFIG.DEFAULT_LANG;
 
     // Utility functions
     const utils = {
@@ -105,147 +102,28 @@
         getUrlParam: function(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
-        }
-    };
-
-    // Translation System
-    const I18n = {
-        async init() {
-            this.detectLanguage();
-            await this.loadTranslation(currentLanguage);
-            this.setupLanguageSwitcher();
-            this.applyTranslations();
         },
 
-        detectLanguage: function() {
-            const urlLang = utils.getUrlParam('lang');
-            // Only use stored preference if there's also a URL parameter
-            // This ensures fresh visits always start with English
-            const storedLang = urlLang ? utils.storage.get('preferred_language') : null;
+        // Simple animation helper
+        animate: function(element, property, from, to, duration) {
+            if (!element || typeof element.style === 'undefined') return;
             
-            let selectedLang = urlLang || CONFIG.DEFAULT_LANG;
+            const start = performance.now();
+            const startValue = from;
+            const change = to - from;
             
-            if (!CONFIG.SUPPORTED_LANGUAGES.includes(selectedLang)) {
-                selectedLang = CONFIG.DEFAULT_LANG;
-            }
-            
-            currentLanguage = selectedLang;
-        },
-
-        async loadTranslation(lang) {
-            if (translations[lang]) {
-                return translations[lang];
-            }
-
-            try {
-                const response = await fetch(`i18n/${lang}.json`);
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${lang}.json`);
-                }
-                translations[lang] = await response.json();
-                return translations[lang];
-            } catch (error) {
-                console.warn(`Failed to load translation for ${lang}:`, error);
-                if (lang !== CONFIG.DEFAULT_LANG) {
-                    return await this.loadTranslation(CONFIG.DEFAULT_LANG);
-                }
-                return {};
-            }
-        },
-
-        async setLanguage(lang) {
-            if (!CONFIG.SUPPORTED_LANGUAGES.includes(lang)) {
-                return;
-            }
-
-            currentLanguage = lang;
-            await this.loadTranslation(lang);
-            this.applyTranslations();
-            this.updateHTMLLang(lang);
-            this.updateActiveButton(lang);
-            
-            // Update contact button URLs for new language
-            ContactEnhancer.enhanceContactButtons();
-            
-            // Store preference
-            utils.storage.set('preferred_language', lang);
-            
-            // Update URL without reload
-            const url = new URL(window.location);
-            url.searchParams.set('lang', lang);
-            window.history.replaceState({}, '', url);
-        },
-
-        updateHTMLLang(lang) {
-            document.documentElement.setAttribute('lang', lang);
-            
-            // Update RTL for Hebrew
-            if (lang === 'he') {
-                document.documentElement.setAttribute('dir', 'rtl');
-            } else {
-                document.documentElement.setAttribute('dir', 'ltr');
-            }
-        },
-
-        updateActiveButton(lang) {
-            utils.$$('.lang-toggle').forEach(btn => {
-                utils.removeClass(btn, 'lang-toggle--active');
-                if (btn.getAttribute('data-lang') === lang) {
-                    utils.addClass(btn, 'lang-toggle--active');
-                }
-            });
-        },
-
-        applyTranslations() {
-            const currentTranslation = translations[currentLanguage] || {};
-            
-            // Apply text translations
-            utils.$$('[data-i18n]').forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                const translation = this.getNestedValue(currentTranslation, key);
+            function step(timestamp) {
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const easeProgress = progress * (2 - progress); // ease-out
                 
-                if (translation) {
-                    if (element.tagName === 'INPUT' && element.type === 'submit') {
-                        element.value = translation;
-                    } else {
-                        element.textContent = translation;
-                    }
-                }
-            });
-
-            // Apply placeholder translations
-            utils.$$('[data-i18n-placeholder]').forEach(element => {
-                const key = element.getAttribute('data-i18n-placeholder');
-                const translation = this.getNestedValue(currentTranslation, key);
+                element.style[property] = startValue + (change * easeProgress) + 'px';
                 
-                if (translation) {
-                    element.placeholder = translation;
+                if (progress < 1) {
+                    requestAnimationFrame(step);
                 }
-            });
-
-            // Update page title
-            const titleTranslation = this.getNestedValue(currentTranslation, 'page.title');
-            if (titleTranslation) {
-                document.title = titleTranslation;
             }
-        },
-
-        getNestedValue(obj, path) {
-            return path.split('.').reduce((current, key) => {
-                return current && current[key] !== undefined ? current[key] : null;
-            }, obj);
-        },
-
-        setupLanguageSwitcher() {
-            const langButtons = utils.$$('.lang-toggle');
             
-            langButtons.forEach(btn => {
-                utils.on(btn, 'click', async (e) => {
-                    e.preventDefault();
-                    const lang = btn.getAttribute('data-lang');
-                    await this.setLanguage(lang);
-                });
-            });
+            requestAnimationFrame(step);
         }
     };
 
@@ -254,86 +132,32 @@
         init: function() {
             this.enhanceWhatsAppButton();
             this.enhanceContactButtons();
-        },
-
-        enhanceContactButtons: function() {
-            this.enhanceWhatsAppButton();
-            this.enhanceSmsButton();
-            this.enhanceEmailButton();
-            this.addButtonInteractions();
+            this.addClickTracking();
         },
 
         enhanceWhatsAppButton: function() {
             const whatsappBtn = utils.$('.whatsapp-btn');
             if (!whatsappBtn) return;
 
+            // Add enhanced WhatsApp URL with more context
+            const currentUrl = window.location.href;
             const tagId = utils.getUrlParam('id') || 'unknown';
+            const timestamp = new Date().toISOString();
             
-            let message;
-            if (currentLanguage === 'he') {
-                message = encodeURIComponent(
-                    `היי אורי, מצאתי את המזוודה שלך! 🧳\n\n` +
-                    `מזהה תג: ${tagId}\n` +
-                    `מצאתי אותה ב: [בבקשה תכתוב איפה]\n` +
-                    `זמן: ${new Date().toLocaleString('he-IL')}\n\n` +
-                    `איך אני יכול להחזיר לך אותה?`
-                );
-            } else {
-                message = encodeURIComponent(
-                    `Hi Ori, I found your luggage! 🧳\n\n` +
-                    `Tag ID: ${tagId}\n` +
-                    `Found at: [Please specify location]\n` +
-                    `Time: ${new Date().toLocaleString()}\n\n` +
-                    `How can I return it to you?`
-                );
-            }
+            const enhancedMessage = encodeURIComponent(
+                `Hi Ori, I found your luggage!\n\n` +
+                `Tag ID: ${tagId}\n` +
+                `Found at: [Please specify location]\n` +
+                `Time: ${new Date().toLocaleString()}\n` +
+                `Contact page: ${currentUrl}\n\n` +
+                `Please let me know how to return it to you.`
+            );
 
-            whatsappBtn.href = `https://wa.me/972509713042?text=${message}`;
+            const whatsappUrl = `https://wa.me/972509713042?text=${enhancedMessage}`;
+            whatsappBtn.href = whatsappUrl;
         },
 
-        enhanceSmsButton: function() {
-            const smsBtn = utils.$('.sms-btn');
-            if (!smsBtn) return;
-
-            let message;
-            if (currentLanguage === 'he') {
-                message = encodeURIComponent('היי אורי, מצאתי את המזוודה שלך! איך אני יכול להחזיר לך אותה?');
-            } else {
-                message = encodeURIComponent('Hi Ori, I found your luggage! How can I return it to you?');
-            }
-
-            smsBtn.href = `sms:+972509713042?body=${message}`;
-        },
-
-        enhanceEmailButton: function() {
-            const emailBtn = utils.$('.email-btn');
-            if (!emailBtn) return;
-
-            let subject, body;
-            if (currentLanguage === 'he') {
-                subject = encodeURIComponent('מצאתי את המזוודה שלך!');
-                body = encodeURIComponent(
-                    'היי אורי,\n\n' +
-                    'מצאתי את המזוודה שלך! איך אני יכול להחזיר לך אותה?\n\n' +
-                    'מיקום: \n' +
-                    'זמן: \n\n' +
-                    'תודה!'
-                );
-            } else {
-                subject = encodeURIComponent('Found Your Luggage!');
-                body = encodeURIComponent(
-                    'Hi Ori,\n\n' +
-                    'I found your luggage! How can I return it to you?\n\n' +
-                    'Location: \n' +
-                    'Time: \n\n' +
-                    'Thank you!'
-                );
-            }
-
-            emailBtn.href = `mailto:oriashkenazi93@gmail.com?subject=${subject}&body=${body}`;
-        },
-
-        addButtonInteractions: function() {
+        enhanceContactButtons: function() {
             const buttons = utils.$$('.contact-btn');
             
             buttons.forEach(button => {
@@ -346,6 +170,9 @@
                     setTimeout(() => {
                         utils.removeClass(button, 'contact-btn--loading');
                     }, 1000);
+
+                    // Track the click
+                    ContactEnhancer.trackContactClick(button);
                 });
 
                 // Add keyboard support
@@ -356,6 +183,40 @@
                     }
                 });
             });
+        },
+
+        addClickTracking: function() {
+            // Simple analytics tracking (privacy-friendly)
+            const trackingData = {
+                timestamp: Date.now(),
+                userAgent: navigator.userAgent,
+                referrer: document.referrer,
+                tagId: utils.getUrlParam('id')
+            };
+
+            // Store locally for potential debugging
+            utils.storage.set('last_visit', JSON.stringify(trackingData));
+        },
+
+        trackContactClick: function(button) {
+            const contactMethod = button.className.includes('whatsapp') ? 'whatsapp' :
+                                 button.className.includes('sms') ? 'sms' :
+                                 button.className.includes('email') ? 'email' :
+                                 button.className.includes('call') ? 'call' : 'unknown';
+            
+            // Log for debugging (remove in production)
+            console.log('Contact method used:', contactMethod);
+            
+            // Could send to analytics service here
+            this.sendAnalytics('contact_click', { method: contactMethod });
+        },
+
+        sendAnalytics: function(event, data) {
+            // Privacy-friendly analytics - only if user consents
+            if (!CONFIG.ANALYTICS_ID) return;
+            
+            // Placeholder for analytics implementation
+            console.log('Analytics event:', event, data);
         }
     };
 
@@ -391,8 +252,7 @@
             
             // Required field validation
             if (isRequired && !value) {
-                const errorMsg = currentLanguage === 'he' ? 'שדה חובה' : 'This field is required';
-                this.showError(field, errorMsg);
+                this.showError(field, 'This field is required');
                 return false;
             }
 
@@ -400,10 +260,7 @@
             if (fieldName === 'contact' && value && value.includes('@')) {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(value)) {
-                    const errorMsg = currentLanguage === 'he' ? 
-                        'אנא הכנס כתובת אימייל תקינה' : 
-                        'Please enter a valid email address';
-                    this.showError(field, errorMsg);
+                    this.showError(field, 'Please enter a valid email address');
                     return false;
                 }
             }
@@ -411,10 +268,7 @@
             // Phone validation
             if (fieldName === 'contact' && value && /^\+?[\d\s\-\(\)]+$/.test(value)) {
                 if (value.replace(/\D/g, '').length < 10) {
-                    const errorMsg = currentLanguage === 'he' ? 
-                        'אנא הכנס מספר טלפון תקין' : 
-                        'Please enter a valid phone number';
-                    this.showError(field, errorMsg);
+                    this.showError(field, 'Please enter a valid phone number');
                     return false;
                 }
             }
@@ -474,12 +328,11 @@
 
         submitForm: function() {
             const submitBtn = utils.$('.form-submit', this.form);
-            const originalText = submitBtn.innerHTML;
+            const originalText = submitBtn.textContent;
             
             // Show loading state
             submitBtn.disabled = true;
-            const loadingText = currentLanguage === 'he' ? 'שולח...' : 'Sending...';
-            submitBtn.innerHTML = `<span class="btn-icon">⏳</span> ${loadingText}`;
+            submitBtn.innerHTML = '<span class="btn-icon">⏳</span> Sending...';
             utils.addClass(submitBtn, 'form-submit--loading');
             
             // Prepare form data
@@ -488,7 +341,7 @@
             // Add metadata
             formData.append('_timestamp', new Date().toISOString());
             formData.append('_tag_id', utils.getUrlParam('id') || 'unknown');
-            formData.append('_language', currentLanguage);
+            formData.append('_user_agent', navigator.userAgent);
             
             // Submit via fetch API
             fetch(this.form.action, {
@@ -508,10 +361,7 @@
             })
             .catch(error => {
                 console.error('Form submission error:', error);
-                const errorMsg = currentLanguage === 'he' ? 
-                    'מצטער, הייתה שגיאה בשליחת ההודעה. אנא נסה להתקשר או לשלוח וואטסאפ במקום.' :
-                    'Sorry, there was an error sending your message. Please try calling or WhatsApp instead.';
-                this.showError(null, errorMsg);
+                this.showError(null, 'Sorry, there was an error sending your message. Please try calling or WhatsApp instead.');
             })
             .finally(() => {
                 // Reset button
@@ -524,15 +374,11 @@
         showSuccess: function() {
             const successDiv = document.createElement('div');
             successDiv.className = 'form-success';
-            
-            const successTitle = currentLanguage === 'he' ? 'ההודעה נשלחה בהצלחה!' : 'Message Sent Successfully!';
-            const successMsg = currentLanguage === 'he' ? 'תודה! אחזור אליך בהקדם האפשרי.' : 'Thank you! I\'ll get back to you as soon as possible.';
-            
             successDiv.innerHTML = `
                 <div class="form-success-content">
                     <span class="success-icon">✅</span>
-                    <h3>${successTitle}</h3>
-                    <p>${successMsg}</p>
+                    <h3>Message Sent Successfully!</h3>
+                    <p>Thank you! I'll get back to you as soon as possible.</p>
                 </div>
             `;
             successDiv.setAttribute('role', 'alert');
@@ -571,8 +417,247 @@
         }
     };
 
+    // Language support
+    const LanguageManager = {
+        init: function() {
+            this.detectLanguage();
+            this.setupLanguageSwitcher();
+        },
+
+        detectLanguage: function() {
+            const urlLang = utils.getUrlParam('lang');
+            const storedLang = utils.storage.get('preferred_language');
+            
+            // Default to English unless explicitly overridden by URL or stored preference
+            let selectedLang = urlLang || storedLang || CONFIG.DEFAULT_LANG;
+            
+            if (!CONFIG.SUPPORTED_LANGUAGES.includes(selectedLang)) {
+                selectedLang = CONFIG.DEFAULT_LANG;
+            }
+            
+            this.setLanguage(selectedLang);
+        },
+
+        setLanguage: function(lang) {
+            document.documentElement.setAttribute('lang', lang);
+            
+            // Update RTL for Hebrew
+            if (lang === 'he') {
+                document.documentElement.setAttribute('dir', 'rtl');
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+            }
+            
+            // Update active language button
+            utils.$$('.lang-btn').forEach(btn => {
+                utils.removeClass(btn, 'lang-btn--active');
+                if (btn.getAttribute('data-lang') === lang) {
+                    utils.addClass(btn, 'lang-btn--active');
+                }
+            });
+            
+            // Store preference
+            utils.storage.set('preferred_language', lang);
+            
+            // Load translations if available
+            this.loadTranslations(lang);
+        },
+
+        loadTranslations: function(lang) {
+            // For now, only English content is in the HTML
+            // Hebrew/Arabic would require translation files to be loaded
+            if (lang !== 'en') {
+                console.log('Translation loading would happen here for:', lang);
+                // Future: fetch(`/i18n/${lang}.json`) and update DOM
+            }
+        },
+
+        setupLanguageSwitcher: function() {
+            const langButtons = utils.$$('.lang-btn');
+            
+            langButtons.forEach(btn => {
+                utils.on(btn, 'click', (e) => {
+                    e.preventDefault();
+                    const lang = btn.getAttribute('data-lang');
+                    this.setLanguage(lang);
+                    
+                    // Update URL without reload
+                    const url = new URL(window.location);
+                    url.searchParams.set('lang', lang);
+                    window.history.replaceState({}, '', url);
+                });
+            });
+        }
+    };
+
+    // Performance monitoring
+    const PerformanceMonitor = {
+        init: function() {
+            if (!window.performance) return;
+            
+            // Monitor Core Web Vitals
+            this.measureCLS();
+            this.measureFID();
+            this.measureLCP();
+            
+            utils.on(window, 'load', () => {
+                setTimeout(() => this.reportMetrics(), 1000);
+            });
+        },
+
+        measureCLS: function() {
+            // Cumulative Layout Shift measurement
+            if (!('PerformanceObserver' in window)) return;
+            
+            try {
+                const observer = new PerformanceObserver(list => {
+                    for (const entry of list.getEntries()) {
+                        if (!entry.hadRecentInput) {
+                            this.cls = (this.cls || 0) + entry.value;
+                        }
+                    }
+                });
+                
+                observer.observe({ type: 'layout-shift', buffered: true });
+            } catch (e) {
+                // Silently fail
+            }
+        },
+
+        measureFID: function() {
+            // First Input Delay measurement
+            if (!('PerformanceObserver' in window)) return;
+            
+            try {
+                const observer = new PerformanceObserver(list => {
+                    for (const entry of list.getEntries()) {
+                        this.fid = entry.processingStart - entry.startTime;
+                        break; // Only report the first input
+                    }
+                });
+                
+                observer.observe({ type: 'first-input', buffered: true });
+            } catch (e) {
+                // Silently fail
+            }
+        },
+
+        measureLCP: function() {
+            // Largest Contentful Paint measurement
+            if (!('PerformanceObserver' in window)) return;
+            
+            try {
+                const observer = new PerformanceObserver(list => {
+                    const entries = list.getEntries();
+                    this.lcp = entries[entries.length - 1].startTime;
+                });
+                
+                observer.observe({ type: 'largest-contentful-paint', buffered: true });
+            } catch (e) {
+                // Silently fail
+            }
+        },
+
+        reportMetrics: function() {
+            const metrics = {
+                cls: this.cls || 0,
+                fid: this.fid || 0,
+                lcp: this.lcp || 0,
+                loadTime: window.performance.timing.loadEventEnd - window.performance.timing.navigationStart,
+                domComplete: window.performance.timing.domComplete - window.performance.timing.navigationStart
+            };
+            
+            // Store metrics for debugging
+            utils.storage.set('performance_metrics', JSON.stringify(metrics));
+            
+            // Log for debugging (remove in production)
+            console.log('Performance metrics:', metrics);
+        }
+    };
+
+    // Accessibility enhancements
+    const AccessibilityEnhancer = {
+        init: function() {
+            this.setupSkipLink();
+            this.setupKeyboardNavigation();
+            this.setupScreenReaderEnhancements();
+            this.setupFocusManagement();
+        },
+
+        setupSkipLink: function() {
+            // Create skip link for screen readers
+            const skipLink = document.createElement('a');
+            skipLink.href = '#main';
+            skipLink.className = 'skip-link';
+            skipLink.textContent = 'Skip to main content';
+            
+            document.body.insertBefore(skipLink, document.body.firstChild);
+            
+            const main = utils.$('.main-content');
+            if (main) {
+                main.setAttribute('id', 'main');
+            }
+        },
+
+        setupKeyboardNavigation: function() {
+            // Enhanced keyboard navigation for buttons
+            const focusableElements = utils.$$('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            
+            focusableElements.forEach(element => {
+                utils.on(element, 'keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        if (element.tagName === 'A' || element.tagName === 'BUTTON') {
+                            // Let default behavior happen
+                        }
+                    }
+                });
+            });
+        },
+
+        setupScreenReaderEnhancements: function() {
+            // Add screen reader friendly status updates
+            const statusDiv = document.createElement('div');
+            statusDiv.setAttribute('aria-live', 'polite');
+            statusDiv.setAttribute('aria-atomic', 'true');
+            statusDiv.className = 'sr-only';
+            statusDiv.id = 'status-updates';
+            document.body.appendChild(statusDiv);
+        },
+
+        setupFocusManagement: function() {
+            // Ensure focus is visible and managed properly
+            let focusOutlineEnabled = true;
+            
+            // Disable focus outline when using mouse
+            utils.on(document, 'mousedown', () => {
+                focusOutlineEnabled = false;
+                document.body.classList.add('using-mouse');
+            });
+            
+            // Re-enable focus outline when using keyboard
+            utils.on(document, 'keydown', (e) => {
+                if (e.key === 'Tab') {
+                    focusOutlineEnabled = true;
+                    document.body.classList.remove('using-mouse');
+                }
+            });
+        },
+
+        announceToScreenReader: function(message) {
+            const statusDiv = utils.$('#status-updates');
+            if (statusDiv) {
+                statusDiv.textContent = message;
+                
+                // Clear after 3 seconds
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 3000);
+            }
+        }
+    };
+
     // Initialize all enhancements when DOM is ready
-    async function init() {
+    function init() {
         // Check if DOM is ready
         if (document.readyState === 'loading') {
             utils.on(document, 'DOMContentLoaded', init);
@@ -581,9 +666,11 @@
 
         // Initialize all modules
         try {
-            await I18n.init();
             ContactEnhancer.init();
             FormEnhancer.init();
+            LanguageManager.init();
+            AccessibilityEnhancer.init();
+            PerformanceMonitor.init();
             
             console.log('Lost Luggage Recovery System - Enhanced version loaded');
         } catch (error) {
@@ -593,5 +680,15 @@
 
     // Start initialization
     init();
+
+    // Export for debugging (remove in production)
+    window.LuggageRecovery = {
+        ContactEnhancer,
+        FormEnhancer,
+        LanguageManager,
+        AccessibilityEnhancer,
+        PerformanceMonitor,
+        utils
+    };
 
 })();
