@@ -150,7 +150,7 @@ body {
     top: 6px;
 }
 
-/* Top Language Bar - Mobile First */
+/* Top Language Bar - Identical on ALL screen sizes */
 .top-bar {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -159,7 +159,7 @@ body {
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-4); /* Consistent padding on all devices */
 }
 
 .top-bar-content {
@@ -257,14 +257,14 @@ body {
     outline-offset: 2px;
 }
 
-/* Desktop language toggle */
+/* Desktop language toggle - Keep identical to mobile */
 @media (min-width: 768px) {
     .top-bar {
-        padding: var(--space-2) var(--space-6);
+        padding: var(--space-2) var(--space-4); /* Same as mobile for consistency */
     }
     
     .top-bar-content {
-        justify-content: flex-end;
+        justify-content: center; /* Keep centered like mobile for consistency */
     }
     
 }
@@ -925,7 +925,7 @@ section {
 
 @media (min-width: 768px) {
     [dir="rtl"] .top-bar-content {
-        justify-content: flex-start; /* Right side in RTL on desktop */
+        justify-content: center; /* Keep centered like mobile for consistency */
     }
 }
 
