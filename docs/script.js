@@ -118,21 +118,29 @@
         },
 
         detectLanguage: function() {
-            const urlLang = utils.getUrlParam('lang');
-            
-            // Clear any existing language preference to ensure fresh start
-            utils.storage.set('preferred_language', null);
-            localStorage.removeItem('preferred_language');
-            
-            // Always default to English unless explicitly overridden by URL parameter
-            // Do not use stored language preference to ensure English is always primary
-            let selectedLang = urlLang || CONFIG.DEFAULT_LANG;
-            
-            if (!CONFIG.SUPPORTED_LANGUAGES.includes(selectedLang)) {
-                selectedLang = CONFIG.DEFAULT_LANG;
+            // NUCLEAR OPTION: Clear ALL storage to ensure English default
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Also clear individual keys just to be sure
+                ['preferred_language', 'luggage_recovery_preferences', 'language', 'lang'].forEach(key => {
+                    localStorage.removeItem(key);
+                    sessionStorage.removeItem(key);
+                });
+            } catch (e) {
+                // Ignore storage errors
             }
             
-            currentLanguage = selectedLang;
+            // Remove any URL lang parameter to prevent persistence
+            const url = new URL(window.location);
+            if (url.searchParams.has('lang')) {
+                url.searchParams.delete('lang');
+                window.history.replaceState({}, '', url);
+            }
+            
+            // ALWAYS start with English, no exceptions
+            currentLanguage = CONFIG.DEFAULT_LANG;
         },
 
         async loadTranslation(lang) {
@@ -170,11 +178,10 @@
             // Update contact button URLs for new language
             ContactEnhancer.enhanceContactButtons();
             
-            // Do not store language preference to ensure English always loads first
-            
-            // Update URL without reload
+            // Do not store language preference OR URL parameter to ensure English always loads first
+            // Remove URL parameter so refresh always goes back to English
             const url = new URL(window.location);
-            url.searchParams.set('lang', lang);
+            url.searchParams.delete('lang');
             window.history.replaceState({}, '', url);
         },
 
