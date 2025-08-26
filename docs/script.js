@@ -120,9 +120,8 @@
         detectLanguage: function() {
             const urlLang = utils.getUrlParam('lang');
             const storedLang = utils.storage.get('preferred_language');
-            const browserLang = navigator.language || navigator.userLanguage;
             
-            let selectedLang = urlLang || storedLang || browserLang.split('-')[0] || CONFIG.DEFAULT_LANG;
+            let selectedLang = urlLang || storedLang || CONFIG.DEFAULT_LANG;
             
             if (!CONFIG.SUPPORTED_LANGUAGES.includes(selectedLang)) {
                 selectedLang = CONFIG.DEFAULT_LANG;
