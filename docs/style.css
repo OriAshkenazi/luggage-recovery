@@ -180,6 +180,15 @@ body {
     border: 1px solid var(--color-border);
 }
 
+/* Static language button order */
+.lang-toggle[data-lang="en"] {
+    order: 1;
+}
+
+.lang-toggle[data-lang="he"] {
+    order: 2;
+}
+
 .lang-toggle {
     display: flex;
     align-items: center;
@@ -917,6 +926,18 @@ section {
     text-align: center;
 }
 
+[dir="rtl"] .hero-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .hero-title .emoji {
+    margin-right: 0;
+    margin-left: var(--space-2);
+}
+
 /* Section Titles - Always centered */
 [dir="rtl"] .section-title {
     text-align: center;
@@ -934,7 +955,7 @@ section {
 /* Contact Buttons RTL - Mobile First */
 [dir="rtl"] .contact-btn {
     direction: rtl;
-    text-align: right;
+    text-align: start;
 }
 
 [dir="rtl"] .btn-icon {
@@ -1020,11 +1041,11 @@ section {
 }
 
 [dir="rtl"] .appreciation-content {
-    text-align: right;
+    text-align: center;
 }
 
 [dir="rtl"] .appreciation-text {
-    text-align: right;
+    text-align: center;
     direction: rtl;
 }
 
