@@ -545,6 +545,11 @@ section {
     max-width: 100%;
 }
 
+.phone-number {
+    direction: ltr;
+    unicode-bidi: bidi-override;
+}
+
 /* Desktop button improvements */
 @media (min-width: 768px) {
     .btn-icon {
