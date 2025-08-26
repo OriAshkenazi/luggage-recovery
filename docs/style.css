@@ -962,21 +962,22 @@ section {
     text-align: right;
 }
 
-/* Contact Buttons RTL - Mobile First */
+/* Contact Buttons RTL - Force icons to RIGHT */
 [dir="rtl"] .contact-btn {
-    direction: rtl;
-    text-align: start;
-    flex-direction: row-reverse; /* Force icon to right */
+    direction: ltr; /* Keep flex layout LTR but reverse with order */
 }
 
 [dir="rtl"] .btn-icon {
+    order: 10; /* Force icon to appear AFTER text */
     margin-right: 0;
     margin-left: var(--space-4);
 }
 
 [dir="rtl"] .btn-text {
+    order: 1; /* Text appears first */
     text-align: right;
     align-items: flex-end;
+    direction: rtl; /* Only text direction is RTL */
 }
 
 [dir="rtl"] .btn-title,
@@ -1010,13 +1011,18 @@ section {
 }
 
 [dir="rtl"] .form-submit {
-    direction: rtl;
-    flex-direction: row-reverse; /* Force icon to right */
+    direction: ltr; /* Keep flex LTR, use order to position */
 }
 
 [dir="rtl"] .form-submit .btn-icon {
+    order: 10; /* Force icon to appear AFTER text */
     margin-left: 0;
     margin-right: var(--space-2);
+}
+
+[dir="rtl"] .form-submit span:not(.btn-icon) {
+    order: 1; /* Text appears first */
+    direction: rtl;
 }
 
 /* Form Error Messages RTL */

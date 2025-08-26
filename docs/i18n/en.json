@@ -11,7 +11,8 @@
     "whatsapp": "WhatsApp",
     "whatsapp_sub": "Fastest response",
     "sms": "Send SMS",
-    "email": "Send Email"
+    "email": "Send Email",
+    "call": "Call"
   },
   "form": {
     "title": "Send a Message",
