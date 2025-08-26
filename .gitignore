@@ -31,3 +31,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Generated artifacts
+3d-models/outputs/
