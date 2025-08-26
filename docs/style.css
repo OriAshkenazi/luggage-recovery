@@ -178,15 +178,25 @@ body {
     padding: var(--space-1);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--color-border);
+    
+    /* Ensure toggle order stays static in both LTR and RTL */
+    flex-direction: row;
+    direction: ltr;
 }
 
-/* Static language button order */
+/* Static language button order - always EN first, HE second */
 .lang-toggle[data-lang="en"] {
     order: 1;
 }
 
 .lang-toggle[data-lang="he"] {
     order: 2;
+}
+
+/* Ensure language toggle stays LTR even in RTL mode */
+[dir="rtl"] .language-toggle {
+    direction: ltr;
+    flex-direction: row;
 }
 
 .lang-toggle {

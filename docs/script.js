@@ -119,9 +119,14 @@
 
         detectLanguage: function() {
             const urlLang = utils.getUrlParam('lang');
-            const storedLang = utils.storage.get('preferred_language');
             
-            let selectedLang = urlLang || storedLang || CONFIG.DEFAULT_LANG;
+            // Clear any existing language preference to ensure fresh start
+            utils.storage.set('preferred_language', null);
+            localStorage.removeItem('preferred_language');
+            
+            // Always default to English unless explicitly overridden by URL parameter
+            // Do not use stored language preference to ensure English is always primary
+            let selectedLang = urlLang || CONFIG.DEFAULT_LANG;
             
             if (!CONFIG.SUPPORTED_LANGUAGES.includes(selectedLang)) {
                 selectedLang = CONFIG.DEFAULT_LANG;
@@ -165,8 +170,7 @@
             // Update contact button URLs for new language
             ContactEnhancer.enhanceContactButtons();
             
-            // Store preference
-            utils.storage.set('preferred_language', lang);
+            // Do not store language preference to ensure English always loads first
             
             // Update URL without reload
             const url = new URL(window.location);
