@@ -150,7 +150,7 @@ body {
     top: 6px;
 }
 
-/* Top Language Bar */
+/* Top Language Bar - Mobile First */
 .top-bar {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -159,21 +159,20 @@ body {
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    padding: var(--space-2) 0;
+    padding: var(--space-2) var(--space-3);
 }
 
 .top-bar-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 var(--space-4);
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
 }
 
 .language-toggle {
     display: flex;
-    gap: var(--space-1);
+    gap: 0;
     background: var(--color-bg-light);
     border-radius: var(--border-radius-xl);
     padding: var(--space-1);
@@ -184,23 +183,21 @@ body {
 .lang-toggle {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-1);
     padding: var(--space-2) var(--space-3);
     border: none;
     background: transparent;
     color: var(--color-text-light);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
     border-radius: var(--border-radius-lg);
     cursor: pointer;
     transition: all var(--transition-fast);
-    min-width: 80px;
+    min-width: 70px;
     justify-content: center;
     
-    /* Ensure minimum touch target size */
-    min-height: 36px;
-    
-    /* Improve tap responsiveness on mobile */
+    /* Mobile touch optimization */
+    min-height: 40px;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
 }
@@ -225,18 +222,44 @@ body {
 }
 
 .lang-flag {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
     line-height: 1;
 }
 
 .lang-text {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     font-weight: var(--font-weight-medium);
+    white-space: nowrap;
 }
 
 .lang-toggle:focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
+}
+
+/* Desktop language toggle */
+@media (min-width: 768px) {
+    .top-bar {
+        padding: var(--space-2) var(--space-6);
+    }
+    
+    .top-bar-content {
+        justify-content: flex-end;
+    }
+    
+    .lang-toggle {
+        min-width: 90px;
+        gap: var(--space-2);
+        font-size: var(--font-size-sm);
+    }
+    
+    .lang-text {
+        font-size: var(--font-size-sm);
+    }
+    
+    .lang-flag {
+        font-size: var(--font-size-base);
+    }
 }
 
 /* Typography */
@@ -305,41 +328,81 @@ strong {
     font-weight: var(--font-weight-medium);
 }
 
-/* Main content */
+/* Main content - Mobile First */
 .main-content {
     max-width: 600px;
     margin: 0 auto;
-    padding: var(--space-8) var(--space-4);
+    padding: var(--space-6) var(--space-4);
 }
 
-/* Sections */
+/* Desktop main content */
+@media (min-width: 768px) {
+    .main-content {
+        padding: var(--space-8) var(--space-6);
+    }
+}
+
+@media (min-width: 1024px) {
+    .main-content {
+        max-width: 800px;
+        padding: var(--space-12) var(--space-8);
+    }
+}
+
+/* Sections - Mobile First */
 section {
-    margin-bottom: var(--space-12);
+    margin-bottom: var(--space-8);
 }
 
 .section-title {
     text-align: center;
     color: var(--color-text);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
     position: relative;
+    font-size: var(--font-size-xl);
 }
 
 .section-title::after {
     content: '';
     display: block;
-    width: 60px;
+    width: 40px;
     height: 3px;
     background: var(--color-primary);
-    margin: var(--space-3) auto 0;
+    margin: var(--space-2) auto 0;
     border-radius: var(--border-radius);
 }
 
-/* Contact Methods */
+/* Desktop sections */
+@media (min-width: 768px) {
+    section {
+        margin-bottom: var(--space-12);
+    }
+    
+    .section-title {
+        margin-bottom: var(--space-6);
+        font-size: var(--font-size-2xl);
+    }
+    
+    .section-title::after {
+        width: 60px;
+        margin: var(--space-3) auto 0;
+    }
+}
+
+/* Contact Methods - Mobile First */
 .contact-methods {
     background: var(--color-bg-light);
     border-radius: var(--border-radius-xl);
-    padding: var(--space-6);
-    margin-bottom: var(--space-8);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+/* Desktop contact methods */
+@media (min-width: 768px) {
+    .contact-methods {
+        padding: var(--space-6);
+        margin-bottom: var(--space-8);
+    }
 }
 
 .contact-buttons {
@@ -348,23 +411,32 @@ section {
     gap: var(--space-4);
 }
 
-/* Contact Buttons */
+/* Contact Buttons - Mobile First */
 .contact-btn {
     display: flex;
     align-items: center;
-    padding: var(--space-5);
+    padding: var(--space-4);
     border-radius: var(--border-radius-lg);
     text-decoration: none;
     font-weight: var(--font-weight-medium);
     transition: all var(--transition-normal);
     border: 2px solid transparent;
     
-    /* Ensure minimum touch target size */
-    min-height: 60px;
+    /* Mobile touch optimization */
+    min-height: 64px; /* Larger for mobile */
+    width: 100%;
     
     /* Improve tap responsiveness on mobile */
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+}
+
+/* Desktop contact buttons */
+@media (min-width: 768px) {
+    .contact-btn {
+        padding: var(--space-5);
+        min-height: 60px;
+    }
 }
 
 .contact-btn:hover {
@@ -428,42 +500,69 @@ section {
     background: var(--color-accent-dark);
 }
 
+/* Button Icon - Mobile First */
 .btn-icon {
-    font-size: var(--font-size-2xl);
-    margin-right: var(--space-4);
+    font-size: var(--font-size-xl); /* Smaller on mobile */
+    margin-right: var(--space-3);
     flex-shrink: 0;
 }
 
+/* Button Text Layout - Mobile First */
 .btn-text {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    flex: 1;
+    min-width: 0; /* Prevent text overflow */
 }
 
 .btn-title {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base); /* Mobile friendly */
     font-weight: var(--font-weight-semibold);
     line-height: var(--line-height-tight);
+    margin-bottom: var(--space-1);
 }
 
 .btn-subtitle {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs); /* Smaller on mobile */
     opacity: 0.8;
-    margin-top: var(--space-1);
+    line-height: var(--line-height-tight);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-/* Contact Form */
+/* Desktop button improvements */
+@media (min-width: 768px) {
+    .btn-icon {
+        font-size: var(--font-size-2xl);
+        margin-right: var(--space-4);
+    }
+    
+    .btn-title {
+        font-size: var(--font-size-lg);
+    }
+    
+    .btn-subtitle {
+        font-size: var(--font-size-sm);
+    }
+}
+
+/* Contact Form - Mobile First */
 .contact-form-section {
     background: var(--color-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-xl);
-    padding: var(--space-6);
+    padding: var(--space-4);
+    margin: var(--space-6) 0;
 }
 
 .form-description {
     text-align: center;
     color: var(--color-text-light);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
+    font-size: var(--font-size-sm);
 }
 
 .contact-form {
@@ -471,7 +570,7 @@ section {
 }
 
 .form-group {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
 }
 
 .form-label {
@@ -479,12 +578,13 @@ section {
     font-weight: var(--font-weight-medium);
     margin-bottom: var(--space-2);
     color: var(--color-text);
+    font-size: var(--font-size-sm);
 }
 
 .form-input,
 .form-textarea {
     width: 100%;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-3);
     border: 2px solid var(--color-border);
     border-radius: var(--border-radius);
     font-size: var(--font-size-base);
@@ -492,9 +592,11 @@ section {
     background: var(--color-bg);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     
-    /* Ensure proper sizing on iOS */
+    /* Mobile optimization */
     -webkit-appearance: none;
     appearance: none;
+    line-height: 1.5;
+    min-height: 48px; /* Better touch target */
 }
 
 .form-input:focus,
@@ -507,11 +609,13 @@ section {
 .form-input::placeholder,
 .form-textarea::placeholder {
     color: var(--color-text-light);
+    font-size: var(--font-size-sm);
 }
 
 .form-textarea {
     resize: vertical;
-    min-height: 120px;
+    min-height: 100px;
+    line-height: 1.5;
 }
 
 .form-submit {
@@ -519,8 +623,8 @@ section {
     background: var(--color-primary);
     color: var(--color-bg);
     border: none;
-    padding: var(--space-4) var(--space-6);
-    font-size: var(--font-size-lg);
+    padding: var(--space-4);
+    font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
     border-radius: var(--border-radius-lg);
     cursor: pointer;
@@ -531,9 +635,11 @@ section {
     gap: var(--space-2);
     min-height: 56px;
     
-    /* Remove iOS styling */
+    /* Mobile optimization */
     -webkit-appearance: none;
     appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .form-submit:hover {
@@ -550,6 +656,40 @@ section {
     background: var(--color-border-dark);
     cursor: not-allowed;
     transform: none;
+}
+
+/* Desktop form improvements */
+@media (min-width: 768px) {
+    .contact-form-section {
+        padding: var(--space-6);
+    }
+    
+    .form-description {
+        margin-bottom: var(--space-6);
+        font-size: var(--font-size-base);
+    }
+    
+    .form-group {
+        margin-bottom: var(--space-5);
+    }
+    
+    .form-label {
+        font-size: var(--font-size-base);
+    }
+    
+    .form-input,
+    .form-textarea {
+        padding: var(--space-3) var(--space-4);
+    }
+    
+    .form-textarea {
+        min-height: 120px;
+    }
+    
+    .form-submit {
+        font-size: var(--font-size-lg);
+        padding: var(--space-4) var(--space-6);
+    }
 }
 
 /* Appreciation section */
@@ -599,12 +739,12 @@ section {
     color: var(--color-text-light);
 }
 
-/* Footer */
+/* Footer - Mobile First */
 .footer {
     background: var(--color-bg-dark);
     padding: var(--space-6) var(--space-4);
     text-align: center;
-    margin-top: var(--space-12);
+    margin-top: var(--space-8);
 }
 
 .footer-content {
@@ -613,58 +753,43 @@ section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
+    gap: var(--space-3);
 }
 
 .footer-text {
     color: var(--color-text-light);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     margin: 0;
+    line-height: 1.4;
 }
 
 .footer-link {
     color: var(--color-primary);
     text-decoration: none;
+    font-weight: var(--font-weight-medium);
 }
 
 .footer-link:hover {
     text-decoration: underline;
 }
 
-/* Language selector */
-.language-selector {
-    display: flex;
-    gap: var(--space-2);
-    background: var(--color-bg);
-    border-radius: var(--border-radius);
-    padding: var(--space-1);
-    border: 1px solid var(--color-border);
+/* Desktop footer */
+@media (min-width: 768px) {
+    .footer {
+        margin-top: var(--space-12);
+        padding: var(--space-8) var(--space-6);
+    }
+    
+    .footer-content {
+        gap: var(--space-4);
+    }
+    
+    .footer-text {
+        font-size: var(--font-size-sm);
+    }
 }
 
-.lang-btn {
-    padding: var(--space-2) var(--space-3);
-    border: none;
-    background: transparent;
-    color: var(--color-text-light);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    min-width: 40px;
-}
-
-.lang-btn:hover {
-    background: var(--color-bg-light);
-    color: var(--color-text);
-}
-
-.lang-btn--active {
-    background: var(--color-primary);
-    color: var(--color-bg);
-}
-
-/* Responsive Design */
+/* Responsive Design - Mobile First */
 
 /* Small tablets and large phones */
 @media (min-width: 480px) {
@@ -778,65 +903,74 @@ section {
     }
 }
 
-/* RTL (Right-to-Left) support for Hebrew */
+/* RTL (Right-to-Left) Support - Mobile First */
+
+/* Base RTL Typography */
 [dir="rtl"] {
     text-align: right;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 
-/* Top Bar RTL */
+/* Top Bar RTL - Mobile First */
 [dir="rtl"] .top-bar-content {
-    justify-content: flex-start;
+    justify-content: center; /* Center on mobile */
 }
 
-[dir="rtl"] .language-toggle {
-    flex-direction: row-reverse;
+@media (min-width: 768px) {
+    [dir="rtl"] .top-bar-content {
+        justify-content: flex-start; /* Right side in RTL on desktop */
+    }
 }
 
-/* Hero Section RTL */
-[dir="rtl"] .hero-content {
-    text-align: center; /* Keep hero centered in both languages */
-}
-
-[dir="rtl"] .hero-title {
-    text-align: center;
-}
-
+/* Hero Section RTL - Always centered for impact */
+[dir="rtl"] .hero-content,
+[dir="rtl"] .hero-title,
 [dir="rtl"] .hero-subtitle {
     text-align: center;
 }
 
-/* Main Content RTL */
-[dir="rtl"] .main-content {
-    text-align: right;
-}
-
+/* Section Titles - Always centered */
 [dir="rtl"] .section-title {
-    text-align: center; /* Keep section titles centered */
+    text-align: center;
 }
 
-/* Contact Buttons RTL */
-[dir="rtl"] .contact-buttons {
+[dir="rtl"] .section-title::after {
+    margin: var(--space-3) auto 0;
+}
+
+/* Contact Methods RTL */
+[dir="rtl"] .contact-methods {
     text-align: right;
 }
 
+/* Contact Buttons RTL - Mobile First */
 [dir="rtl"] .contact-btn {
+    direction: rtl;
     text-align: right;
-    flex-direction: row-reverse;
 }
 
 [dir="rtl"] .btn-icon {
+    order: 2;
     margin-right: 0;
     margin-left: var(--space-4);
-    order: 2;
 }
 
 [dir="rtl"] .btn-text {
-    align-items: flex-end;
-    text-align: right;
     order: 1;
+    text-align: right;
+    align-items: flex-end;
 }
 
-/* Form RTL */
+[dir="rtl"] .btn-title,
+[dir="rtl"] .btn-subtitle {
+    text-align: right;
+}
+
+/* Form RTL - Mobile First */
+[dir="rtl"] .contact-form-section {
+    text-align: right;
+}
+
 [dir="rtl"] .form-description {
     text-align: center;
 }
@@ -847,21 +981,49 @@ section {
 
 [dir="rtl"] .form-label {
     text-align: right;
+    display: block;
 }
 
 [dir="rtl"] .form-input,
 [dir="rtl"] .form-textarea {
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: plaintext; /* Better Hebrew text handling */
+}
+
+[dir="rtl"] .form-submit {
+    direction: rtl;
+}
+
+[dir="rtl"] .form-submit .btn-icon {
+    order: 2;
+    margin-left: 0;
+    margin-right: var(--space-2);
+}
+
+[dir="rtl"] .form-submit span:last-child {
+    order: 1;
+}
+
+/* Form Error Messages RTL */
+[dir="rtl"] .form-error {
     text-align: right;
     direction: rtl;
 }
 
-[dir="rtl"] .form-submit {
-    flex-direction: row-reverse;
+[dir="rtl"] .form-error::before {
+    margin-left: var(--space-1);
+    margin-right: 0;
 }
 
-[dir="rtl"] .form-submit .btn-icon {
-    margin-left: 0;
-    margin-right: var(--space-2);
+/* Success Messages RTL */
+[dir="rtl"] .form-success {
+    text-align: center;
+    direction: rtl;
+}
+
+[dir="rtl"] .form-success-content {
+    text-align: center;
 }
 
 /* Appreciation Section RTL */
@@ -875,25 +1037,46 @@ section {
 
 [dir="rtl"] .appreciation-text {
     text-align: right;
+    direction: rtl;
 }
 
 /* Footer RTL */
 [dir="rtl"] .footer-content {
     text-align: center;
+    flex-direction: column;
 }
 
 [dir="rtl"] .footer-text {
     text-align: center;
+    direction: rtl;
 }
 
-/* Responsive RTL Adjustments */
-@media (min-width: 768px) {
-    [dir="rtl"] .contact-buttons {
-        text-align: center;
+/* Mobile Responsive RTL Fixes */
+@media (max-width: 767px) {
+    [dir="rtl"] .contact-btn {
+        padding: var(--space-4) var(--space-3);
     }
     
-    [dir="rtl"] .contact-btn {
-        text-align: right;
+    [dir="rtl"] .btn-text {
+        min-width: 0;
+        flex: 1;
+    }
+    
+    [dir="rtl"] .form-input,
+    [dir="rtl"] .form-textarea {
+        padding: var(--space-3) var(--space-4);
+    }
+}
+
+/* Desktop RTL Refinements */
+@media (min-width: 768px) {
+    [dir="rtl"] .contact-buttons {
+        align-items: center;
+    }
+    
+    [dir="rtl"] .footer-content {
+        flex-direction: row-reverse;
+        justify-content: space-between;
     }
 }
 
