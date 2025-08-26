@@ -1,0 +1,40 @@
+# Website-specific .gitignore
+
+# Temporary files
+.DS_Store
+.tmp/
+*.tmp
+*.log
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules (if any build tools are added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Cache directories
+.cache/
+.sass-cache/
+
+# Generated icons (if using icon generator)
+icons/generated/
+
+# Backup files
+*.bak
+*.backup

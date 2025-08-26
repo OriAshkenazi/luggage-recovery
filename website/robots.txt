@@ -1,0 +1,11 @@
+# Robots.txt for Lost Luggage Recovery System
+# This site should be indexed to help people find lost luggage
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://luggage-recovery.example.com/sitemap.xml
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1
