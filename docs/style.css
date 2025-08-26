@@ -952,7 +952,7 @@ section {
 [dir="rtl"] .btn-text {
     order: 1; /* Text appears first */
     text-align: right;
-    align-items: flex-end;
+    align-items: flex-start;
     direction: rtl; /* Only text direction is RTL */
     width: 100%;
 }
