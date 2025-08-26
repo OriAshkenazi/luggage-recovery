@@ -27,10 +27,9 @@ This document outlines coding standards, practices, and workflows for the Lost L
 
 ### Directory Structure
 ```
-├── website/          # Web component - GitHub Pages root
+├── docs/             # Web component - GitHub Pages root
 ├── 3d-models/        # Physical component - STL files
 ├── scripts/          # Automation component - Python tools
-├── docs/             # Documentation only
 ├── .github/          # GitHub Actions and templates
 └── assets/           # Shared resources (logos, fonts)
 ```
@@ -82,7 +81,7 @@ This document outlines coding standards, practices, and workflows for the Lost L
 ### Implementation
 - HTML `lang` attributes
 - CSS logical properties for RTL support
-- Separate translation files in `website/i18n/`
+- Separate translation files in `docs/i18n/`
 - Browser locale detection with manual override
 
 ### Text Guidelines
@@ -125,12 +124,12 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 type(scope): description
 
-feat(website): add WhatsApp contact button
+feat(docs): add WhatsApp contact button
 fix(scripts): resolve QR code encoding issue
 docs(readme): update installation instructions
 style(css): improve mobile responsiveness
 refactor(3d): optimize tag holder geometry
-test(website): add accessibility tests
+test(docs): add accessibility tests
 chore(deps): update Python requirements
 ```
 
@@ -190,7 +189,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r scripts/requirements.txt
 
 # Start local web server
-cd website
+cd docs
 python -m http.server 8000
 ```
 

@@ -1,10 +1,10 @@
-# Lost Luggage Recovery Website
+# Lost Luggage Recovery Contact Page
 
-Mobile-first contact website for lost luggage recovery system.
+Mobile-first contact page for lost luggage recovery system.
 
 ## 🎯 Purpose
 
-This website serves as the landing page when someone scans a QR code or NFC tag on lost luggage. It provides multiple ways to contact the luggage owner quickly and easily.
+This contact page serves as the landing page when someone scans a QR code or NFC tag on lost luggage. It provides multiple ways to contact the luggage owner quickly and easily.
 
 ## 🏗️ Architecture
 
@@ -28,7 +28,7 @@ This website serves as the landing page when someone scans a QR code or NFC tag 
 
 1. **Start local server:**
    ```bash
-   cd website
+   cd docs
    python -m http.server 8000
    ```
 
@@ -42,7 +42,7 @@ This website serves as the landing page when someone scans a QR code or NFC tag 
 1. **Push to GitHub:**
    ```bash
    git add .
-   git commit -m "Add website files"
+   git commit -m "Add contact page files"
    git push origin main
    ```
 
@@ -50,7 +50,7 @@ This website serves as the landing page when someone scans a QR code or NFC tag 
    - Go to repository Settings
    - Navigate to Pages section
    - Set source to "Deploy from a branch"
-   - Select "main" branch and "/website" folder
+   - Select "main" branch and "/docs" folder
    - Save settings
 
 3. **Configure custom domain (optional):**
@@ -100,7 +100,7 @@ Modify CSS custom properties in `style.css`:
 
 ## 🌐 Multi-Language Support
 
-The website supports English, Hebrew, and Arabic:
+The contact page supports English and Hebrew:
 
 ### Adding Translations
 
@@ -108,8 +108,7 @@ The website supports English, Hebrew, and Arabic:
    ```
    i18n/
    ├── en.json
-   ├── he.json
-   └── ar.json
+   └── he.json
    ```
 
 2. Add translation keys to JSON files:
@@ -127,7 +126,7 @@ The website supports English, Hebrew, and Arabic:
 
 ### RTL Support
 
-Hebrew and Arabic automatically get RTL layout via CSS:
+Hebrew automatically gets RTL layout via CSS:
 
 ```css
 [dir="rtl"] {

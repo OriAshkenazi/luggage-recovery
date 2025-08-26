@@ -8,7 +8,7 @@ Create a reliable, accessible, and efficient lost luggage recovery system that m
 ### Success Metrics
 - **Recovery Rate**: Target 70% successful contact rate when luggage is found
 - **Contact Time**: Average <2 minutes from scan to contact initiation
-- **System Uptime**: 99.9% availability for contact website
+- **System Uptime**: 99.9% availability for contact page (docs/)
 - **User Experience**: <5 taps/clicks to complete contact process
 - **Global Accessibility**: Support for users in 95+ countries
 
@@ -35,7 +35,7 @@ Create a reliable, accessible, and efficient lost luggage recovery system that m
 ```
 
 ### Data Flow
-1. **Tag Creation**: Scripts generate QR codes linking to contact website
+1. **Tag Creation**: Scripts generate QR codes linking to contact page (docs/)
 2. **Physical Deployment**: 3D printed holders secure tags to luggage
 3. **Discovery**: Finder scans QR code or taps NFC tag
 4. **Contact Initiation**: Website loads with multiple contact options
@@ -227,7 +227,7 @@ Create a reliable, accessible, and efficient lost luggage recovery system that m
 ### Development Environment
 ```bash
 # Local development server
-cd website
+cd docs
 python -m http.server 8000
 
 # Python script development
@@ -297,7 +297,7 @@ pip install -r requirements.txt
 
 ### Phase 1: Core Implementation (Month 1-2)
 - [x] Documentation and planning
-- [ ] Basic website with contact methods
+- [ ] Basic contact page (docs/) with contact methods
 - [ ] Python QR code generation scripts
 - [ ] Initial 3D tag holder design
 

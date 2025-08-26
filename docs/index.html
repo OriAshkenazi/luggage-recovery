@@ -12,13 +12,13 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="You Found My Luggage! 🧳">
     <meta property="og:description" content="Thank you for finding my luggage! Please contact me using any of the methods below.">
-    <meta property="og:url" content="https://oriashkenazi.github.io/luggage-recovery">
+    <meta property="og:url" content="https://luggage-recovery.example.com">
     
     <!-- Theme colors -->
     <meta name="theme-color" content="#0066CC">
     <meta name="msapplication-TileColor" content="#0066CC">
     
-    <title data-i18n="page.title">You Found My Luggage! 🧳 - Contact Ori</title>
+    <title>You Found My Luggage! 🧳 - Contact Ori</title>
     
     <link rel="stylesheet" href="style.css">
     
@@ -36,37 +36,22 @@
     <link rel="preconnect" href="https://formspree.io">
 </head>
 <body>
-    <!-- Top language selector -->
-    <div class="top-bar">
-        <div class="top-bar-content">
-            <div class="language-toggle" role="group" aria-label="Language selection">
-                <button type="button" class="lang-toggle lang-toggle--active" data-lang="en" aria-label="English">
-                    <span class="lang-flag">🇺🇸</span>
-                    <span class="lang-text">English</span>
-                </button>
-                <button type="button" class="lang-toggle" data-lang="he" aria-label="עברית">
-                    <span class="lang-flag">🇮🇱</span>
-                    <span class="lang-text">עברית</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <header class="hero">
         <div class="hero-content">
             <h1 class="hero-title">
                 <span class="emoji" role="img" aria-label="luggage">🧳</span>
-                <span data-i18n="hero.title">You Found My Luggage!</span>
+                You Found My Luggage!
             </h1>
-            <p class="hero-subtitle" data-i18n="hero.subtitle">
-                Thank you for being honest and helpful! Please contact me using any method below:
+            <p class="hero-subtitle">
+                Thank you for being honest and helpful!
+                <strong>Please contact me using any method below:</strong>
             </p>
         </div>
     </header>
 
     <main class="main-content">
         <section class="contact-methods" aria-labelledby="contact-heading">
-            <h2 id="contact-heading" class="section-title" data-i18n="contact.title">Contact Me</h2>
+            <h2 id="contact-heading" class="section-title">Contact Me</h2>
             
             <div class="contact-buttons">
                 <!-- Primary: WhatsApp -->
@@ -77,48 +62,57 @@
                    aria-label="Contact via WhatsApp - Opens in new window">
                     <span class="btn-icon" role="img" aria-hidden="true">📱</span>
                     <span class="btn-text">
-                        <span class="btn-title" data-i18n="contact.whatsapp">WhatsApp</span>
-                        <span class="btn-subtitle" data-i18n="contact.whatsapp_sub">Fastest response</span>
+                        <span class="btn-title">WhatsApp</span>
+                        <span class="btn-subtitle">Fastest response</span>
                     </span>
                 </a>
                 
                 <!-- Secondary: SMS -->
-                <a href="sms:+972509713042?body=Hi%20Ori%2C%20I%20found%20your%20luggage!%20How%20can%20I%20return%20it%20to%20you%3F" 
+                <a href="sms:+972509713042?body=Hi%20Ori%2C%20I%20found%20your%20luggage!%20Please%20let%20me%20know%20how%20to%20return%20it." 
                    class="contact-btn contact-btn--secondary sms-btn"
                    aria-label="Send SMS text message">
                     <span class="btn-icon" role="img" aria-hidden="true">💬</span>
                     <span class="btn-text">
-                        <span class="btn-title" data-i18n="contact.sms">Send SMS</span>
+                        <span class="btn-title">Send SMS</span>
                         <span class="btn-subtitle">+972&#8209;50&#8209;971&#8209;3042</span>
                     </span>
                 </a>
                 
                 <!-- Tertiary: Email -->
-                <a href="mailto:oriashkenazi93@gmail.com?subject=Found%20Your%20Luggage&body=Hi%20Ori%2C%0A%0AI%20found%20your%20luggage!%20How%20can%20I%20return%20it%20to%20you%3F%0A%0ALocation%3A%20%0ATime%3A%20%0A%0AThank%20you!" 
+                <a href="mailto:oriashkenazi93@gmail.com?subject=Found%20Your%20Luggage&body=Hi%20Ori%2C%0A%0AI%20found%20your%20luggage!%20Please%20let%20me%20know%20how%20to%20return%20it.%0A%0ALocation%3A%20%0ATime%3A%20%0A%0AThank%20you!" 
                    class="contact-btn contact-btn--tertiary email-btn"
                    aria-label="Send email">
                     <span class="btn-icon" role="img" aria-hidden="true">📧</span>
                     <span class="btn-text">
-                        <span class="btn-title" data-i18n="contact.email">Send Email</span>
+                        <span class="btn-title">Send Email</span>
                         <span class="btn-subtitle">oriashkenazi93@gmail.com</span>
+                    </span>
+                </a>
+                
+                <!-- Call button -->
+                <a href="tel:+972509713042" 
+                   class="contact-btn contact-btn--call call-btn"
+                   aria-label="Call phone number">
+                    <span class="btn-icon" role="img" aria-hidden="true">📞</span>
+                    <span class="btn-text">
+                        <span class="btn-title">Call</span>
+                        <span class="btn-subtitle">+972&#8209;50&#8209;971&#8209;3042</span>
                     </span>
                 </a>
             </div>
         </section>
 
         <section class="contact-form-section" aria-labelledby="form-heading">
-            <h2 id="form-heading" class="section-title" data-i18n="form.title">Send a Message</h2>
-            <p class="form-description" data-i18n="form.description">
-                If the above methods don't work, please fill out this form:
-            </p>
+            <h2 id="form-heading" class="section-title">Or Send a Message</h2>
+            <p class="form-description">If the above methods don't work, please fill out this form:</p>
             
             <form class="contact-form" 
-                  action="https://formspree.io/f/xdknzpko" 
+                  action="https://formspree.io/f/YOUR_FORM_ID" 
                   method="POST"
                   novalidate>
                 
                 <div class="form-group">
-                    <label for="finder-name" class="form-label" data-i18n="form.name">Your Name</label>
+                    <label for="finder-name" class="form-label">Your Name</label>
                     <input type="text" 
                            id="finder-name" 
                            name="name" 
@@ -128,52 +122,67 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="finder-contact" class="form-label" data-i18n="form.contact">Your Phone/Email</label>
+                    <label for="finder-contact" class="form-label">Your Phone/Email</label>
                     <input type="text" 
                            id="finder-contact" 
                            name="contact" 
                            class="form-input"
                            autocomplete="tel"
-                           data-i18n-placeholder="form.contact_placeholder"
                            placeholder="So I can contact you back"
                            required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="location" class="form-label" data-i18n="form.location">Where did you find it?</label>
+                    <label for="location" class="form-label">Where did you find it?</label>
                     <input type="text" 
                            id="location" 
                            name="location" 
                            class="form-input"
-                           data-i18n-placeholder="form.location_placeholder"
                            placeholder="Airport, hotel, street, etc."
                            required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="message" class="form-label" data-i18n="form.message">Message</label>
+                    <label for="message" class="form-label">Message</label>
                     <textarea id="message" 
                               name="message" 
                               class="form-textarea"
                               rows="4"
-                              data-i18n-placeholder="form.message_placeholder"
                               placeholder="Any additional details..."
                               required></textarea>
                 </div>
                 
                 <button type="submit" class="form-submit">
                     <span class="btn-icon" role="img" aria-hidden="true">📤</span>
-                    <span data-i18n="form.submit">Send Message</span>
+                    Send Message
                 </button>
             </form>
         </section>
 
         <section class="appreciation" aria-labelledby="thanks-heading">
-            <h2 id="thanks-heading" class="section-title" data-i18n="thanks.title">Thank You! 🙏</h2>
+            <h2 id="thanks-heading" class="section-title">Thank You! 🙏</h2>
             <div class="appreciation-content">
-                <p class="appreciation-text" data-i18n="thanks.message">
-                    Your honesty in contacting me means a lot! Lost luggage can be stressful, 
-                    and people like you make traveling better for everyone.
+                <p class="appreciation-text">
+                    Your honesty and kindness in contacting me means the world! 
+                    Lost luggage can be incredibly stressful, and people like you 
+                    make traveling better for everyone.
+                </p>
+                <p class="appreciation-reward">
+                    <strong>I'd love to offer you a small reward</strong> for your trouble 
+                    - please let me know when you contact me!
+                </p>
+            </div>
+        </section>
+
+        <section class="owner-info" aria-labelledby="owner-heading">
+            <h2 id="owner-heading" class="section-title">About the Owner</h2>
+            <div class="owner-details">
+                <p><strong>Name:</strong> Ori Ashkenazi</p>
+                <p><strong>Location:</strong> Israel</p>
+                <p><strong>Languages:</strong> Hebrew, English</p>
+                <p class="owner-note">
+                    I'm a traveler who believes in the kindness of strangers. 
+                    Thank you for proving that good people exist everywhere!
                 </p>
             </div>
         </section>
@@ -182,13 +191,18 @@
     <footer class="footer">
         <div class="footer-content">
             <p class="footer-text">
-                <span data-i18n="footer.system">Lost Luggage Recovery System</span> | 
-                <a href="https://github.com/OriAshkenazi/luggage-recovery" 
+                Lost Luggage Recovery System | 
+                <a href="https://github.com/oriashkenazi/luggage-recovery" 
                    target="_blank" 
                    rel="noopener noreferrer"
-                   class="footer-link"
-                   data-i18n="footer.github">View on GitHub</a>
+                   class="footer-link">View on GitHub</a>
             </p>
+            
+            <!-- Language selector -->
+            <div class="language-selector" role="group" aria-label="Language selection">
+                <button type="button" class="lang-btn lang-btn--active" data-lang="en" aria-label="English">EN</button>
+                <button type="button" class="lang-btn" data-lang="he" aria-label="עברית">עב</button>
+            </div>
         </div>
     </footer>
 
