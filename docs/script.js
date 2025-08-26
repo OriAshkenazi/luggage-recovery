@@ -119,9 +119,11 @@
 
         detectLanguage: function() {
             const urlLang = utils.getUrlParam('lang');
-            const storedLang = utils.storage.get('preferred_language');
+            // Only use stored preference if there's also a URL parameter
+            // This ensures fresh visits always start with English
+            const storedLang = urlLang ? utils.storage.get('preferred_language') : null;
             
-            let selectedLang = urlLang || storedLang || CONFIG.DEFAULT_LANG;
+            let selectedLang = urlLang || CONFIG.DEFAULT_LANG;
             
             if (!CONFIG.SUPPORTED_LANGUAGES.includes(selectedLang)) {
                 selectedLang = CONFIG.DEFAULT_LANG;
