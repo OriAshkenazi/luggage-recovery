@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['3.10', '3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('requirements.txt') }}
+      - run: pip install -r requirements.txt
+      - run: python 3d-models/generate_tag.py --out 3d-models/outputs/
+      - run: python 3d-models/generate_tag.py --out 3d-models/outputs/islands --variant islands
+      - run: pytest -q
+      - name: upload base artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tag-default-${{ matrix.os }}-${{ matrix.python }}
+          path: 3d-models/outputs/*
+      - name: upload island artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tag-islands-${{ matrix.os }}-${{ matrix.python }}
+          path: 3d-models/outputs/islands/*
+
+  release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python 3d-models/generate_tag.py --out 3d-models/outputs/
+      - run: python 3d-models/generate_tag.py --out 3d-models/outputs/islands --variant islands
+      - run: pytest -q
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            3d-models/outputs/*
+            3d-models/outputs/islands/*
