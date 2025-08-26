@@ -966,16 +966,15 @@ section {
 [dir="rtl"] .contact-btn {
     direction: rtl;
     text-align: start;
+    flex-direction: row-reverse; /* Force icon to right */
 }
 
 [dir="rtl"] .btn-icon {
-    order: 2;
     margin-right: 0;
     margin-left: var(--space-4);
 }
 
 [dir="rtl"] .btn-text {
-    order: 1;
     text-align: right;
     align-items: flex-end;
 }
@@ -1012,16 +1011,12 @@ section {
 
 [dir="rtl"] .form-submit {
     direction: rtl;
+    flex-direction: row-reverse; /* Force icon to right */
 }
 
 [dir="rtl"] .form-submit .btn-icon {
-    order: 2;
     margin-left: 0;
     margin-right: var(--space-2);
-}
-
-[dir="rtl"] .form-submit span:last-child {
-    order: 1;
 }
 
 /* Form Error Messages RTL */
