@@ -1,36 +1,36 @@
 {
   "page": {
-    "title": "מצאת את המזוודה שלי! 🧳 - צור קשר עם אורי"
+    "title": "מצאת את המזוודה שלי! 🧳 - איך ליצור קשר עם אורי"
   },
   "hero": {
     "title": "מצאת את המזוודה שלי!",
-    "subtitle": "תודה על הכנות ועל העזרה! אנא צור איתי קשר בכל אחת מהדרכים הבאות:"
+    "subtitle": "תודה רבה על הישרות והעזרה! בבקשה תיצור איתי קשר באחת מהדרכים הבאות:"
   },
   "contact": {
-    "title": "צור קשר",
+    "title": "איך ליצור קשר",
     "whatsapp": "וואטסאפ",
     "whatsapp_sub": "התגובה הכי מהירה",
-    "sms": "שלח SMS",
-    "email": "שלח אימייל"
+    "sms": "הודעת SMS",
+    "email": "אימייל"
   },
   "form": {
-    "title": "שלח הודעה",
-    "description": "אם הדרכים למעלה לא עובדות, אנא מלא את הטופס:",
+    "title": "שליחת הודעה",
+    "description": "אם האפשרויות למעלה לא עובדות, אפשר למלא את הטופס הזה:",
     "name": "השם שלך",
-    "contact": "הטלפון/אימייל שלך",
+    "contact": "טלפון או אימייל",
     "contact_placeholder": "כדי שאוכל לחזור אליך",
     "location": "איפה מצאת אותה?",
-    "location_placeholder": "שדה תעופה, מלון, רחוב וכו'",
+    "location_placeholder": "נמל תעופה, מלון, רחוב וכו'",
     "message": "הודעה",
     "message_placeholder": "פרטים נוספים...",
     "submit": "שלח הודעה"
   },
   "thanks": {
     "title": "תודה רבה! 🙏",
-    "message": "הכנות שלך מעניינת לי מאוד! מזוודה אבודה יכולה להיות מלחיצה, ואנשים כמוך הופכים את הנסיעות לטובות יותר עבור כולם."
+    "message": "הישרות שלך ממש חשובה לי! מזוודה אבודה זה סיפור מלחיץ, ואנשים כמוך עושים את העולם למקום טוב יותר."
   },
   "footer": {
-    "system": "מערכת שחזור מזוודות אבודות",
-    "github": "צפה ב-GitHub"
+    "system": "מערכת החזרת מזוודות אבודות",
+    "github": "קוד ב-GitHub"
   }
 }

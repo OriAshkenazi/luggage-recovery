@@ -150,6 +150,95 @@ body {
     top: 6px;
 }
 
+/* Top Language Bar */
+.top-bar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    padding: var(--space-2) 0;
+}
+
+.top-bar-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.language-toggle {
+    display: flex;
+    gap: var(--space-1);
+    background: var(--color-bg-light);
+    border-radius: var(--border-radius-xl);
+    padding: var(--space-1);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+}
+
+.lang-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: none;
+    background: transparent;
+    color: var(--color-text-light);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--border-radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    min-width: 80px;
+    justify-content: center;
+    
+    /* Ensure minimum touch target size */
+    min-height: 36px;
+    
+    /* Improve tap responsiveness on mobile */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.lang-toggle:hover {
+    background: var(--color-bg);
+    color: var(--color-text);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.lang-toggle--active {
+    background: var(--color-primary);
+    color: var(--color-bg);
+    box-shadow: var(--shadow);
+}
+
+.lang-toggle--active:hover {
+    background: var(--color-primary-dark);
+    color: var(--color-bg);
+    transform: none;
+}
+
+.lang-flag {
+    font-size: var(--font-size-base);
+    line-height: 1;
+}
+
+.lang-text {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+.lang-toggle:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
     font-weight: var(--font-weight-bold);
@@ -694,23 +783,62 @@ section {
     text-align: right;
 }
 
-[dir="rtl"] .hero-content,
-[dir="rtl"] .main-content,
-[dir="rtl"] .footer-content {
+/* Top Bar RTL */
+[dir="rtl"] .top-bar-content {
+    justify-content: flex-start;
+}
+
+[dir="rtl"] .language-toggle {
+    flex-direction: row-reverse;
+}
+
+/* Hero Section RTL */
+[dir="rtl"] .hero-content {
+    text-align: center; /* Keep hero centered in both languages */
+}
+
+[dir="rtl"] .hero-title {
+    text-align: center;
+}
+
+[dir="rtl"] .hero-subtitle {
+    text-align: center;
+}
+
+/* Main Content RTL */
+[dir="rtl"] .main-content {
     text-align: right;
 }
 
+[dir="rtl"] .section-title {
+    text-align: center; /* Keep section titles centered */
+}
+
+/* Contact Buttons RTL */
 [dir="rtl"] .contact-buttons {
     text-align: right;
 }
 
-[dir="rtl"] .btn-text {
-    align-items: flex-end;
+[dir="rtl"] .contact-btn {
+    text-align: right;
+    flex-direction: row-reverse;
 }
 
 [dir="rtl"] .btn-icon {
     margin-right: 0;
     margin-left: var(--space-4);
+    order: 2;
+}
+
+[dir="rtl"] .btn-text {
+    align-items: flex-end;
+    text-align: right;
+    order: 1;
+}
+
+/* Form RTL */
+[dir="rtl"] .form-description {
+    text-align: center;
 }
 
 [dir="rtl"] .form-group {
@@ -724,6 +852,7 @@ section {
 [dir="rtl"] .form-input,
 [dir="rtl"] .form-textarea {
     text-align: right;
+    direction: rtl;
 }
 
 [dir="rtl"] .form-submit {
@@ -735,12 +864,37 @@ section {
     margin-right: var(--space-2);
 }
 
-[dir="rtl"] .language-selector {
-    flex-direction: row-reverse;
+/* Appreciation Section RTL */
+[dir="rtl"] .appreciation {
+    text-align: center;
 }
 
+[dir="rtl"] .appreciation-content {
+    text-align: right;
+}
+
+[dir="rtl"] .appreciation-text {
+    text-align: right;
+}
+
+/* Footer RTL */
 [dir="rtl"] .footer-content {
-    flex-direction: row-reverse;
+    text-align: center;
+}
+
+[dir="rtl"] .footer-text {
+    text-align: center;
+}
+
+/* Responsive RTL Adjustments */
+@media (min-width: 768px) {
+    [dir="rtl"] .contact-buttons {
+        text-align: center;
+    }
+    
+    [dir="rtl"] .contact-btn {
+        text-align: right;
+    }
 }
 
 /* Dark mode support (for future implementation) */

@@ -163,6 +163,9 @@
             this.updateHTMLLang(lang);
             this.updateActiveButton(lang);
             
+            // Update contact button URLs for new language
+            ContactEnhancer.enhanceContactButtons();
+            
             // Store preference
             utils.storage.set('preferred_language', lang);
             
@@ -184,10 +187,10 @@
         },
 
         updateActiveButton(lang) {
-            utils.$$('.lang-btn').forEach(btn => {
-                utils.removeClass(btn, 'lang-btn--active');
+            utils.$$('.lang-toggle').forEach(btn => {
+                utils.removeClass(btn, 'lang-toggle--active');
                 if (btn.getAttribute('data-lang') === lang) {
-                    utils.addClass(btn, 'lang-btn--active');
+                    utils.addClass(btn, 'lang-toggle--active');
                 }
             });
         },
@@ -233,7 +236,7 @@
         },
 
         setupLanguageSwitcher() {
-            const langButtons = utils.$$('.lang-btn');
+            const langButtons = utils.$$('.lang-toggle');
             
             langButtons.forEach(btn => {
                 utils.on(btn, 'click', async (e) => {
@@ -252,38 +255,84 @@
             this.enhanceContactButtons();
         },
 
+        enhanceContactButtons: function() {
+            this.enhanceWhatsAppButton();
+            this.enhanceSmsButton();
+            this.enhanceEmailButton();
+            this.addButtonInteractions();
+        },
+
         enhanceWhatsAppButton: function() {
             const whatsappBtn = utils.$('.whatsapp-btn');
             if (!whatsappBtn) return;
 
-            // Add enhanced WhatsApp URL with more context
-            const currentUrl = window.location.href;
             const tagId = utils.getUrlParam('id') || 'unknown';
             
             let message;
             if (currentLanguage === 'he') {
                 message = encodeURIComponent(
-                    `היי אורי, מצאתי את המזוודה שלך!\n\n` +
+                    `היי אורי, מצאתי את המזוודה שלך! 🧳\n\n` +
                     `מזהה תג: ${tagId}\n` +
-                    `נמצא ב: [אנא ציין מיקום]\n` +
+                    `מצאתי אותה ב: [בבקשה תכתוב איפה]\n` +
                     `זמן: ${new Date().toLocaleString('he-IL')}\n\n` +
-                    `אנא תגיד לי איך להחזיר לך אותה.`
+                    `איך אני יכול להחזיר לך אותה?`
                 );
             } else {
                 message = encodeURIComponent(
-                    `Hi Ori, I found your luggage!\n\n` +
+                    `Hi Ori, I found your luggage! 🧳\n\n` +
                     `Tag ID: ${tagId}\n` +
                     `Found at: [Please specify location]\n` +
                     `Time: ${new Date().toLocaleString()}\n\n` +
-                    `Please let me know how to return it to you.`
+                    `How can I return it to you?`
                 );
             }
 
-            const whatsappUrl = `https://wa.me/972509713042?text=${message}`;
-            whatsappBtn.href = whatsappUrl;
+            whatsappBtn.href = `https://wa.me/972509713042?text=${message}`;
         },
 
-        enhanceContactButtons: function() {
+        enhanceSmsButton: function() {
+            const smsBtn = utils.$('.sms-btn');
+            if (!smsBtn) return;
+
+            let message;
+            if (currentLanguage === 'he') {
+                message = encodeURIComponent('היי אורי, מצאתי את המזוודה שלך! איך אני יכול להחזיר לך אותה?');
+            } else {
+                message = encodeURIComponent('Hi Ori, I found your luggage! How can I return it to you?');
+            }
+
+            smsBtn.href = `sms:+972509713042?body=${message}`;
+        },
+
+        enhanceEmailButton: function() {
+            const emailBtn = utils.$('.email-btn');
+            if (!emailBtn) return;
+
+            let subject, body;
+            if (currentLanguage === 'he') {
+                subject = encodeURIComponent('מצאתי את המזוודה שלך!');
+                body = encodeURIComponent(
+                    'היי אורי,\n\n' +
+                    'מצאתי את המזוודה שלך! איך אני יכול להחזיר לך אותה?\n\n' +
+                    'מיקום: \n' +
+                    'זמן: \n\n' +
+                    'תודה!'
+                );
+            } else {
+                subject = encodeURIComponent('Found Your Luggage!');
+                body = encodeURIComponent(
+                    'Hi Ori,\n\n' +
+                    'I found your luggage! How can I return it to you?\n\n' +
+                    'Location: \n' +
+                    'Time: \n\n' +
+                    'Thank you!'
+                );
+            }
+
+            emailBtn.href = `mailto:oriashkenazi93@gmail.com?subject=${subject}&body=${body}`;
+        },
+
+        addButtonInteractions: function() {
             const buttons = utils.$$('.contact-btn');
             
             buttons.forEach(button => {
