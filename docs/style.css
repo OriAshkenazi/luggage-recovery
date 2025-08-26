@@ -417,7 +417,7 @@ section {
 
 .contact-buttons {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: var(--space-4);
     grid-auto-rows: 1fr;
 }
@@ -834,6 +834,7 @@ section {
     }
 
     .contact-buttons {
+        grid-template-columns: repeat(2, 1fr);
         gap: var(--space-5);
     }
 }
@@ -843,13 +844,9 @@ section {
     .hero {
         padding: var(--space-16) var(--space-8);
     }
-    
+
     .main-content {
         padding: var(--space-16) var(--space-8);
-    }
-
-    .contact-buttons {
-        grid-template-columns: repeat(2, 1fr);
     }
 }
 
