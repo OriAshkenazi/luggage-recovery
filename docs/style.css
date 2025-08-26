@@ -320,14 +320,11 @@ strong {
     font-size: var(--font-size-3xl);
     margin-bottom: var(--space-4);
     font-weight: var(--font-weight-bold);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .hero-title .emoji {
     display: inline-block;
-    margin-inline-end: var(--space-2);
+    margin-right: var(--space-2);
     font-size: 1.2em;
 }
 
@@ -416,10 +413,9 @@ section {
 }
 
 .contact-buttons {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-4);
-    grid-auto-rows: 1fr;
 }
 
 /* Contact Buttons - Mobile First */
@@ -436,7 +432,6 @@ section {
     /* Mobile touch optimization */
     min-height: 64px; /* Larger for mobile */
     width: 100%;
-    height: 100%;
     
     /* Improve tap responsiveness on mobile */
     -webkit-tap-highlight-color: transparent;
@@ -543,11 +538,6 @@ section {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
-}
-
-.phone-number {
-    direction: ltr;
-    unicode-bidi: bidi-override;
 }
 
 /* Desktop button improvements */
@@ -833,14 +823,21 @@ section {
     .hero-title {
         font-size: 3rem;
     }
+    
+    .contact-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-5);
+    }
+    
+    .contact-btn--primary,
+    .contact-btn--secondary {
+        grid-column: 1 / -1;
+    }
+    
     .footer-content {
         flex-direction: row;
         justify-content: space-between;
-    }
-
-    .contact-buttons {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-5);
     }
 }
 
@@ -849,9 +846,23 @@ section {
     .hero {
         padding: var(--space-16) var(--space-8);
     }
-
+    
     .main-content {
         padding: var(--space-16) var(--space-8);
+    }
+    
+    .contact-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .contact-btn--primary {
+        grid-column: 1 / -1;
+    }
+    
+    .contact-btn--secondary,
+    .contact-btn--tertiary,
+    .contact-btn--call {
+        grid-column: span 1;
     }
 }
 
@@ -925,6 +936,17 @@ section {
     text-align: center;
 }
 
+[dir="rtl"] .hero-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .hero-title .emoji {
+    margin-right: 0;
+    margin-left: var(--space-2);
+}
 
 /* Section Titles - Always centered */
 [dir="rtl"] .section-title {
@@ -954,14 +976,16 @@ section {
 [dir="rtl"] .btn-text {
     order: 1; /* Text appears first */
     text-align: right;
-    align-items: flex-start;
+    align-items: flex-end;
     direction: rtl; /* Only text direction is RTL */
-    width: 100%;
+    width: 100%; /* Take full width for proper alignment */
 }
 
 [dir="rtl"] .btn-title,
 [dir="rtl"] .btn-subtitle {
     text-align: right;
+    width: 100%; /* Ensure full width for right alignment */
+    display: block; /* Force block display for proper alignment */
 }
 
 /* Form RTL - Mobile First */
@@ -1069,6 +1093,10 @@ section {
 
 /* Desktop RTL Refinements */
 @media (min-width: 768px) {
+    [dir="rtl"] .contact-buttons {
+        align-items: center;
+    }
+    
     [dir="rtl"] .footer-content {
         flex-direction: row-reverse;
         justify-content: space-between;
