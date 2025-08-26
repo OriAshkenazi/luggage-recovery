@@ -4,10 +4,10 @@
   },
   "hero": {
     "title": "מצאת את המזוודה שלי!",
-    "subtitle": "תודה רבה על הישרות והעזרה! בבקשה תיצור איתי קשר באחת מהדרכים הבאות:"
+    "subtitle": "תודה רבה על העזרה! בבקשה צור איתי קשר באחת מהדרכים הבאות:"
   },
   "contact": {
-    "title": "איך ליצור קשר",
+    "title": "איך ליצור קשר?",
     "whatsapp": "וואטסאפ",
     "whatsapp_sub": "התגובה הכי מהירה",
     "sms": "הודעת SMS",
@@ -27,7 +27,7 @@
   },
   "thanks": {
     "title": "תודה רבה! 🙏",
-    "message": "הישרות שלך ממש חשובה לי! מזוודה אבודה זה סיפור מלחיץ, ואנשים כמוך עושים את העולם למקום טוב יותר."
+    "message": "תודה רבה על העזרה! מזוודה אבודה זה סיפור מלחיץ, ואנשים כמוך עושים את העולם למקום טוב יותר."
   },
   "footer": {
     "system": "מערכת החזרת מזוודות אבודות",
