@@ -1,0 +1,14 @@
+qr_w: 50.0
+qr_h: 30.0
+qr_border: 3.0
+body_t: 3.0
+min_wall: 1.5
+corner_r: 3.0
+nfc_d: 25.0
+nfc_depth: 1.0
+fit_clearance: 0.25
+strap_hole_d: 5.0
+strap_slot_w: 0.0
+strap_slot_l: 0.0
+qr_pocket_depth: 0.2
+island_h: 0.5
