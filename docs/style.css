@@ -832,10 +832,7 @@ section {
         gap: var(--space-5);
     }
     
-    .contact-btn--primary,
-    .contact-btn--secondary {
-        grid-column: 1 / -1;
-    }
+    /* Ensure 2x2 layout: no full-width spans on tablet */
     
     .footer-content {
         flex-direction: row;
@@ -857,15 +854,7 @@ section {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .contact-btn--primary {
-        grid-column: 1 / -1;
-    }
-    
-    .contact-btn--secondary,
-    .contact-btn--tertiary,
-    .contact-btn--call {
-        grid-column: span 1;
-    }
+    /* Ensure 2x2 layout: each button occupies one column */
 }
 
 /* Large desktop */
