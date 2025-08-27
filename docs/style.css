@@ -84,6 +84,8 @@
     --transition-fast: 150ms ease-in-out;
     --transition-normal: 300ms ease-in-out;
     --transition-slow: 500ms ease-in-out;
+    /* Force UA widgets to light */
+    color-scheme: light;
 }
 
 /* Reset and base styles */
@@ -1103,26 +1105,7 @@ section {
     }
 }
 
-/* Dark mode support (for future implementation) */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-text: #F8F9FA;
-        --color-text-light: #CED4DA;
-        --color-bg: #1A1D23;
-        --color-bg-light: #2C3E50;
-        --color-bg-dark: #34495E;
-        --color-border: #495057;
-        --color-border-dark: #6C757D;
-    }
-    
-    .hero {
-        background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
-    }
-    
-    .appreciation {
-        background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
-    }
-}
+/* Dark mode removed: site is light-only */
 
 /* Form enhancement styles */
 .form-input--error,
