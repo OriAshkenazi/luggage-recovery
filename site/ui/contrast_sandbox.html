@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contrast Sandbox</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#fff; color:#222; }
+    .section { margin: 24px auto; max-width: 720px; }
+    .row { display:flex; gap:12px; flex-wrap:nowrap; }
+    .grid { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+    .btn { border:0; border-radius:8px; padding:12px 16px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; min-width:120px; }
+    .btn:focus { outline: 3px solid #1A73E8; outline-offset:2px; }
+    .btn-primary { background:#0B3D91; color:#fff; }
+    .btn-primary.is-hover { background:#08306B; }
+    .btn-secondary { background:#E9ECEF; color:#000; }
+    .btn-secondary.is-hover { background:#DEE2E6; }
+    .btn-destructive { background:#B00020; color:#fff; }
+    .btn-link { background:#fff; color:#0B3D91; text-decoration:underline; }
+  </style>
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <script>
+    // Ensure keyboard focusability if used as anchors
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.btn').forEach(el => {
+        if (!el.hasAttribute('role')) el.setAttribute('role','button');
+        if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
+      });
+    });
+  </script>
+  <style id="focus-style-marker">.btn:focus{outline:3px solid #1A73E8}</style>
+</head>
+<body>
+  <main class="section">
+    <section id="grid-2x2" class="grid" aria-label="2x2 button grid">
+      <button class="btn btn-primary" aria-label="Primary Default">Primary Default</button>
+      <button class="btn btn-primary is-hover" aria-label="Primary Hover">Primary Hover</button>
+      <button class="btn btn-secondary" aria-label="Secondary Default">Secondary Default</button>
+      <button class="btn btn-secondary is-hover" aria-label="Secondary Hover">Secondary Hover</button>
+    </section>
+
+    <section id="row-1x4" class="row" aria-label="1x4 button row" style="margin-top:24px;">
+      <button class="btn btn-primary" aria-label="Primary">Primary</button>
+      <button class="btn btn-secondary" aria-label="Secondary">Secondary</button>
+      <button class="btn btn-destructive" aria-label="Destructive">Destructive</button>
+      <button class="btn btn-link" aria-label="Link" data-size="large">Link</button>
+    </section>
+  </main>
+</body>
+</html>
+
