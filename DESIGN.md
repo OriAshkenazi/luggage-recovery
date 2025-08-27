@@ -44,7 +44,7 @@ Out of scope: Implementation code. This document is a plan only.
 
 API endpoints (initial minimal set):
 - GET `/r?u=<uid>&t=<token>`
-  - Validates token against registry (store and compare token hash, not raw token).
+  - Validates token using HMAC‑SHA256 (`RECOVERY_SECRET`) against `token_hash` (`hmac256:<hex>` in registry).
   - Checks `missing`.
   - Renders one of two templates:
     - Public (missing=false): generic status + non-PII relay form.
@@ -64,11 +64,11 @@ Admin/Owner toggle:
 
 Security/Privacy controls:
 - Privacy default: `missing=false` returns no PII in response.
-- Store token hash, never raw token.
-- Rate limiting and abuse mitigations on `/r` and `/relay`.
+- Store HMAC token hash, never raw token; legacy SHA‑256 disabled by default.
+- Security headers: CSP `default-src 'none'; style-src 'self'; img-src 'self'`, Referrer‑Policy `no-referrer`, Permissions‑Policy `geolocation=(), microphone=()`, `X-Content-Type-Options: nosniff`.
 - No PII in server logs; redact address/phone/name in any analytics.
-- CORS restricted to same-origin; responses set `X-Robots-Tag: noindex`.
-- Development registry stored locally in a git-ignored file or loaded from `.env` secrets; documentation uses redacted examples only.
+- Responses include `X-Robots-Tag: noindex` and light color scheme meta; CORS restricted to same-origin.
+- Development registry stored locally in a git-ignored file; documentation uses redacted examples only.
 
 
 ## CAD/Text Layout Spec
@@ -129,4 +129,3 @@ Validation checks (strict):
 - CLI toggle and logging.
 - Generator text parameters, keep-out maps, and validations.
 - Tests: privacy gating, audit, geometry layout, two-tone alignment, slicer layer calculation.
-

@@ -28,13 +28,13 @@ This website serves as the landing page when someone scans a QR code or NFC tag 
 
 1. **Start local server:**
    ```bash
-   cd website
+   cd docs
    python -m http.server 8000
    ```
 
 2. **Open browser:**
    ```
-   http://localhost:8000
+   http://localhost:8000/docs/index.html
    ```
 
 ### GitHub Pages Deployment
@@ -42,7 +42,7 @@ This website serves as the landing page when someone scans a QR code or NFC tag 
 1. **Push to GitHub:**
    ```bash
    git add .
-   git commit -m "Add website files"
+   git commit -m "Update website files"
    git push origin main
    ```
 
@@ -50,7 +50,7 @@ This website serves as the landing page when someone scans a QR code or NFC tag 
    - Go to repository Settings
    - Navigate to Pages section
    - Set source to "Deploy from a branch"
-   - Select "main" branch and "/website" folder
+   - Select "main" branch and "/docs" folder
    - Save settings
 
 3. **Configure custom domain (optional):**

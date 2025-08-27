@@ -8,7 +8,7 @@ This document specifies the JSON Lines (JSONL) schema for the tag registry used 
 
 ## Fields
 - `uid` (string, required): Unique tag identifier (from QR payload).
-- `token_hash` (string, required): Hash of the secret token from the QR URL query `t`. Never store raw token.
+- `token_hash` (string, required): HMAC-SHA256 of the token using `RECOVERY_SECRET`, stored as `hmac256:<hex>`. Never store raw token. Legacy `sha256:<hex>` entries may be temporarily accepted only if `ALLOW_LEGACY_SHA256=true` is set.
 - `missing` (boolean, default false): Privacy gate; if false, no PII is returned.
 - `owner_name` (string, optional, PII): Redacted in docs; stored locally only.
 - `owner_phone` (string, optional, PII): E.164 preferred. Stored locally only.
@@ -43,4 +43,3 @@ This document specifies the JSON Lines (JSONL) schema for the tag registry used 
 - Command: `python tools/missing.py --uid <uid> --set true|false --note "..."`
 - Behavior: update `missing`, set `missing_updated_at`, append to `audit`, update `updated_at`.
 - Idempotence: no-op if already set; still append audit entry with note.
-

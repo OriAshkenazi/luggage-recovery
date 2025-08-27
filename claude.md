@@ -13,13 +13,14 @@ This document outlines coding standards, practices, and workflows for the Lost L
 ## 🏗️ Architecture Principles
 
 ### Component Separation
-- **Website**: Stateless, client-side only, GitHub Pages compatible
-- **3D Models**: Self-contained STL files with minimal dependencies
-- **Scripts**: Pure Python with standard libraries where possible
+- **Website**: Static site in `/docs/`, GitHub Pages compatible
+- **3D Models**: Parametric generator producing STL artifacts deterministically
+- **Privacy App**: Minimal FastAPI service for token-gated owner info (optional)
 
 ### Technology Constraints
-- **No server-side processing**: GitHub Pages limitations
-- **No databases**: Use local storage or configuration files
+- **Static site delivery**: Contact page served from GitHub Pages
+- **Minimal server-side**: Optional FastAPI app for privacy-gated rendering
+- **No databases**: Use local JSONL registry for development; keep PII out of git
 - **Minimal dependencies**: Reduce complexity and security vectors
 - **Cross-platform compatibility**: Works on all major platforms
 
@@ -29,7 +30,8 @@ This document outlines coding standards, practices, and workflows for the Lost L
 ```
 ├── docs/             # Web component - GitHub Pages root
 ├── 3d-models/        # Physical component - STL files
-├── scripts/          # Automation component - Python tools
+├── app/              # FastAPI privacy app (optional)
+├── tools/            # Utilities (contrast, toggle)
 ├── .github/          # GitHub Actions and templates
 └── assets/           # Shared resources (logos, fonts)
 ```
