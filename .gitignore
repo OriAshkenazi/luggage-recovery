@@ -41,3 +41,4 @@ build/
 .coverage
 coverage.xml
 *.egg-info/
+registry.jsonl

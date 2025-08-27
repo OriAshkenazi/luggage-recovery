@@ -42,6 +42,24 @@ class Params:
     strap_slot_l: float = 0.0
     qr_pocket_depth: float = 0.2
     island_h: float = 0.5
+    # Text params (front prompt)
+    front_prompt_text: str = "Scan me to find my owner"
+    front_prompt_h: float = 0.5
+    front_prompt_margin: float = 2.0
+    front_text_style: str = "emboss"  # or "engrave"
+    front_text_height: float = 0.5
+    front_text_depth: float = 0.3
+    front_font_path: str | None = None
+    front_prompt_edge: str = "bottom"  # top|bottom|left|right
+    # Text params (back)
+    back_name: str | None = None
+    back_phone: str | None = None
+    back_address: str | None = None
+    back_text_h: float = 4.0
+    back_line_gap: float = 1.5
+    back_margin: float = 3.0
+    back_text_style: str = "engrave"  # or "emboss"
+    back_font_path: str | None = None
 
 
 def load_params(path: Path | None) -> Params:
@@ -181,6 +199,59 @@ def build_islands(p: Params) -> cq.Workplane:
         )
     ring = ring.edges("|Z").fillet(0.5)
     return ring
+
+
+def _text_solid_front(p: Params, width: float, height: float) -> cq.Workplane:
+    if not p.front_prompt_text:
+        return cq.Workplane("XY")
+    edge = p.front_prompt_edge.lower()
+    margin = p.front_prompt_margin
+    # Position line near chosen edge
+    x = 0.0
+    y = 0.0
+    rot = 0
+    if edge == "top":
+        y = height / 2 - margin
+    elif edge == "bottom":
+        y = -height / 2 + margin
+    elif edge == "left":
+        x = -width / 2 + margin
+        rot = 90
+    else:  # right
+        x = width / 2 - margin
+        rot = 90
+    wp = cq.Workplane("XY").workplane(offset=p.body_t / 2)
+    txt = wp.center(x, y).rotate((0, 0, 0), (0, 0, 1), rot).text(
+        p.front_prompt_text,
+        p.back_text_h if rot else p.back_text_h,
+        p.front_text_height if p.front_text_style == "emboss" else p.front_text_depth,
+        kind="bold",
+        cut=False,
+        combine=True,
+        font=p.front_font_path or "Sans",
+    )
+    if p.front_text_style == "emboss":
+        return txt
+    else:
+        # Engrave: cut into base later by using it as cutter
+        return txt
+
+
+def _text_solids_back(p: Params, width: float, height: float) -> cq.Workplane:
+    lines = [s for s in [p.back_name, p.back_phone, p.back_address] if s]
+    if not lines:
+        return cq.Workplane("XY")
+    # Compute layout area (back face): respect margins and NFC/strap keep-outs crudely by using inner rectangle
+    inner_w = width - 2 * p.back_margin
+    inner_h = height - 2 * p.back_margin
+    wp = cq.Workplane("XY").workplane(offset=-p.body_t / 2)
+    y0 = inner_h / 2 - p.back_text_h  # start near top of inner rect
+    solid = cq.Workplane("XY")
+    for i, text in enumerate(lines):
+        y = y0 - i * (p.back_text_h + p.back_line_gap)
+        t = wp.center(0, y).text(text, p.back_text_h, p.back_text_height if p.back_text_style == "emboss" else p.front_text_depth, kind="bold", cut=False, combine=True, font=p.back_font_path or "Sans")
+        solid = solid.union(t)
+    return solid
 
 
 def build_qr_islands(p: Params, qr_text: Optional[str], qr_svg: Optional[Path]) -> Tuple[cq.Workplane, dict]:
@@ -392,6 +463,7 @@ def build_and_export(
     preset: Optional[str] = None,
     qr_text: Optional[str] = None,
     qr_svg: Optional[Path] = None,
+    text_features: bool = False,
 ) -> Path:
     _validate_inputs(p)
     if deterministic:
@@ -410,9 +482,26 @@ def build_and_export(
         manifest["color_switch_layer"] = color_switch_layer_index(p.island_h, layer_height)
 
     # Export variants
+    # Front/back text solids
+    front_text = _text_solid_front(p, width, height)
+    back_text = _text_solids_back(p, width, height)
+    # Apply text to base
+    base_with_text = base
+    if p.front_text_style == "emboss" and not front_text.val().isNull():
+        base_with_text = base_with_text.union(front_text)
+    if p.front_text_style == "engrave" and not front_text.val().isNull():
+        base_with_text = base_with_text.cut(front_text)
+    if p.back_text_style == "emboss" and not back_text.val().isNull():
+        base_with_text = base_with_text.union(back_text)
+    if p.back_text_style == "engrave" and not back_text.val().isNull():
+        # Ensure min wall
+        if p.body_t - p.front_text_depth < p.min_wall:
+            raise ValueError("Back engraving violates minimum wall thickness")
+        base_with_text = base_with_text.cut(back_text)
+
     if variant in ("base", "all"):
         path = out / "tag_base.stl"
-        export_stl(base.union(islands), path, deterministic=deterministic)
+        export_stl(base_with_text.union(islands), path, deterministic=deterministic)
         manifest["files"][str(path.name)] = {"sha256": _sha256(path)}
         # Previews
         if previews in ("svg", "png"):
@@ -444,11 +533,22 @@ def build_and_export(
     if variant in ("islands", "all"):
         path_b = out / "tag_alt_qr_islands_base.stl"
         path_f = out / "tag_alt_qr_islands_features.stl"
-        export_stl(base, path_b, deterministic=deterministic)
+        export_stl(base_with_text, path_b, deterministic=deterministic)
         export_stl(islands, path_f, deterministic=deterministic)
         manifest["files"][str(path_b.name)] = {"sha256": _sha256(path_b)}
         manifest["files"][str(path_f.name)] = {"sha256": _sha256(path_f)}
         _two_tone_asserts(p, path_b, path_f)
+
+    # Optional text features for two-tone printing
+    if text_features:
+        if not front_text.val().isNull():
+            pth = out / "front_text_features.stl"
+            export_stl(front_text, pth, deterministic=deterministic)
+            manifest["files"][pth.name] = {"sha256": _sha256(pth)}
+        if not back_text.val().isNull() and p.back_text_style == "emboss":
+            pth = out / "back_text_features.stl"
+            export_stl(back_text, pth, deterministic=deterministic)
+            manifest["files"][pth.name] = {"sha256": _sha256(pth)}
 
     # Optional coupons
     if emit_coupons:
@@ -525,6 +625,24 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--preset", choices=["pla", "petg", "abs"])
     parser.add_argument("--qr_text", type=str)
     parser.add_argument("--qr_svg", type=Path)
+    # Text CLI
+    parser.add_argument("--front_prompt_text", type=str)
+    parser.add_argument("--front_prompt_h", type=float)
+    parser.add_argument("--front_prompt_margin", type=float)
+    parser.add_argument("--front_text_style", choices=["emboss", "engrave"])
+    parser.add_argument("--front_text_height", type=float)
+    parser.add_argument("--front_text_depth", type=float)
+    parser.add_argument("--front_font_path", type=str)
+    parser.add_argument("--front_prompt_edge", choices=["top", "bottom", "left", "right"])
+    parser.add_argument("--back_name", type=str)
+    parser.add_argument("--back_phone", type=str)
+    parser.add_argument("--back_address", type=str)
+    parser.add_argument("--back_text_h", type=float)
+    parser.add_argument("--back_line_gap", type=float)
+    parser.add_argument("--back_margin", type=float)
+    parser.add_argument("--back_text_style", choices=["emboss", "engrave"])
+    parser.add_argument("--back_font_path", type=str)
+    parser.add_argument("--text_features", action="store_true")
     return parser.parse_args()
 
 
@@ -571,6 +689,7 @@ def main():
         preset=preset_name,
         qr_text=getattr(args, 'qr_text', None),
         qr_svg=getattr(args, 'qr_svg', None),
+        text_features=getattr(args, 'text_features', False),
     )
 
 
