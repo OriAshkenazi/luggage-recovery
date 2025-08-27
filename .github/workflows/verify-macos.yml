@@ -56,6 +56,8 @@ jobs:
       - name: Layout and contrast tests
         run: pytest -q -k "contrast or layout"
       - name: Run privacy/text tests subset
+        env:
+          RECOVERY_SECRET: CI_SECRET
         run: pytest -q -k "privacy or text_geom or determinism or contrast or layout"
       - name: Generate default outputs (A) deterministic, svg, QR, CI strict with text
         run: |
