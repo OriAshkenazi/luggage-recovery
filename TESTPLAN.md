@@ -4,13 +4,14 @@ Scope: Validate the end-to-end behavior for privacy gating (missing mode), dual-
 
 ## 1) Privacy & API Behavior
 - Token verification
-  - GET `/r?u=<uid>&t=<token>` with correct token → 200
-  - Incorrect token → 403 or generic 200 page with no PII (implementation choice), never leak PII.
+  - GET `/r?u=<uid>&t=<token>` with valid HMAC (`hmac256:<hex>`) → 200
+  - Tampered token or UID → 400; no PII leakage
+  - Legacy `sha256:<hex>` rejected when `ALLOW_LEGACY_SHA256=false` (default)
 - Missing flag gating
   - `missing=false` → Render generic registered page with contact relay form (no owner PII).
   - `missing=true` → Render owner-visible page with owner name/phone/address and optional relay.
 - Headers & indexing
-  - Responses include `X-Robots-Tag: noindex`.
+  - Responses include `X-Robots-Tag: noindex` and security headers (CSP, Referrer‑Policy `no-referrer`, Permissions‑Policy `geolocation=(), microphone=()`, `X-Content-Type-Options: nosniff`).
   - CORS restricted.
 - Relay
   - POST `/relay` accepts message and minimal sender contact; rate-limited; does not expose owner PII when `missing=false`.
@@ -54,4 +55,3 @@ Scope: Validate the end-to-end behavior for privacy gating (missing mode), dual-
 ## 7) Data Hygiene
 - No PII in repo: sample configs use redacted placeholders.
 - Local registry file is git-ignored; tests use in-memory fixtures or ephemeral files.
-
