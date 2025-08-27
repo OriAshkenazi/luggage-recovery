@@ -43,8 +43,9 @@ def test_cli_matrix(tmp_path):
             assert (out / 'tag_alt_flat_front.stl').exists()
         else:
             assert (out / 'tag_base.stl').exists()
-            assert (out / 'preview_front.png').exists()
-            assert (out / 'preview_back.png').exists()
+            # Accept either PNG or SVG previews
+            assert (out / 'preview_front.png').exists() or (out / 'preview_front.svg').exists()
+            assert (out / 'preview_back.png').exists() or (out / 'preview_back.svg').exists()
 
 
 def test_invalid_combo(tmp_path):

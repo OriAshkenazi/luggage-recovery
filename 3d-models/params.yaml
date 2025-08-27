@@ -12,3 +12,19 @@ strap_slot_w: 0.0
 strap_slot_l: 0.0
 qr_pocket_depth: 0.2
 island_h: 0.5
+presets:
+  pla:
+    fit_clearance: 0.25
+    corner_r: 3.5
+    island_h: 0.5
+    recommended_layer_height: 0.20
+  petg:
+    fit_clearance: 0.30
+    corner_r: 3.0
+    island_h: 0.6
+    recommended_layer_height: 0.20
+  abs:
+    fit_clearance: 0.35
+    corner_r: 2.5
+    island_h: 0.5
+    recommended_layer_height: 0.20

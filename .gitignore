@@ -34,3 +34,10 @@ Thumbs.db
 
 # Generated artifacts
 3d-models/outputs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+*.egg-info/
