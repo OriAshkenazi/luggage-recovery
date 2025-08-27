@@ -8,3 +8,4 @@ psutil==7.0.0
 Pillow==11.3.0
 segno==1.6.1
 numpy==2.3.2
+beautifulsoup4==4.12.3

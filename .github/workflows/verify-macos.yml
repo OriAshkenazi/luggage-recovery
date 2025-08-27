@@ -51,6 +51,10 @@ jobs:
           python-version: '3.11'
       - name: Install Python deps
         run: pip install -r requirements.txt
+      - name: Contrast check tokens
+        run: python tools/contrast_check.py tokens/buttons.json
+      - name: Layout and contrast tests
+        run: pytest -q -k "contrast or layout"
       - name: Run tests
         run: pytest -q
       - name: Generate default outputs (A) deterministic, svg, QR, CI strict

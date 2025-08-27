@@ -1,0 +1,20 @@
+{
+  "buttons": {
+    "primary": {
+      "default": {"fg": "#FFFFFF", "bg": "#0B3D91"},
+      "hover":   {"fg": "#FFFFFF", "bg": "#08306B"}
+    },
+    "secondary": {
+      "default": {"fg": "#000000", "bg": "#E9ECEF"},
+      "hover":   {"fg": "#000000", "bg": "#DEE2E6"}
+    },
+    "destructive": {
+      "default": {"fg": "#FFFFFF", "bg": "#B00020"}
+    },
+    "link": {
+      "default": {"fg": "#0B3D91", "bg": "#FFFFFF", "large": true}
+    }
+  },
+  "focus": {"ring": "#1A73E8", "adjacent": "#FFFFFF"}
+}
+
