@@ -94,3 +94,23 @@ This project is licensed under the MIT License. See [LICENSE](../LICENSE).
 ## Previews
 ![Front preview](outputs/preview_front.png)
 ![Back preview](outputs/preview_back.png)
+## Dual-Side Text & Prompt
+- Front prompt (QR side):
+```
+python 3d-models/generate_tag.py \
+  --out 3d-models/outputs/ \
+  --previews svg --deterministic \
+  --front_prompt_text "Scan me to find my owner" \
+  --front_text_style emboss --front_text_height 0.5
+```
+- Back owner text (example content — do not commit PII):
+```
+python 3d-models/generate_tag.py \
+  --out 3d-models/outputs/ \
+  --previews svg --deterministic \
+  --back_name "Ori Ashkenazi" \
+  --back_phone "+972-XX-XXXXXXX" \
+  --back_address "Bnei Brak 17 apt. 3 Tel Aviv Israel" \
+  --back_text_style engrave --back_text_h 4.0 --back_line_gap 1.2 --back_margin 3.0
+```
+- Warning: never commit real PII. Keep owner fields in local files or env; `registry.jsonl` is git-ignored.
