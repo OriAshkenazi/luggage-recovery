@@ -98,6 +98,10 @@ Modify CSS custom properties in `style.css`:
 }
 ```
 
+### Theme Policy
+
+This site is light-only. Dark mode is not supported, and automatic theme switching is disabled. The CSS sets `:root { color-scheme: light; }` and the HTML includes `<meta name="color-scheme" content="light">`.
+
 ## 🌐 Multi-Language Support
 
 The website supports English, Hebrew, and Arabic:

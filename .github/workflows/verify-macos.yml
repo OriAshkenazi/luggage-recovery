@@ -17,6 +17,34 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Guard against dark mode hooks
+        run: |
+          set -euo pipefail
+          # Search for dark-mode hooks in recovery UI assets
+          if grep -R -nE "prefers-color-scheme|data-theme=\"dark\"|:root\\.dark|(^|[^-])\\.dark([^a-zA-Z0-9_-]|$)|theme-dark" docs/; then
+            echo "Found dark-mode related patterns. Light-only policy violation." >&2
+            exit 1
+          fi
+      - name: Verify HTML meta for light theme
+        run: |
+          python - << 'PY'
+          import sys, re
+          from pathlib import Path
+          html = Path('docs/index.html').read_text(encoding='utf-8')
+          has_color_scheme = re.search(r'<meta[^>]+name=["\']color-scheme["\'][^>]+content=["\']light["\']', html, re.I)
+          if not has_color_scheme:
+            print('Missing <meta name="color-scheme" content="light">', file=sys.stderr)
+            sys.exit(1)
+          m = re.search(r'<meta[^>]+name=["\']theme-color["\'][^>]+content=["\']([^"\']+)["\']', html, re.I)
+          if not m:
+            print('Missing <meta name="theme-color">', file=sys.stderr)
+            sys.exit(1)
+          val = m.group(1).strip().lower()
+          if not (val == '#fff' or val == '#ffffff' or val == '#ffffff'):
+            print(f'theme-color should be light (#fff or #ffffff), got {val}', file=sys.stderr)
+            sys.exit(1)
+          print('Light meta checks passed')
+          PY
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
