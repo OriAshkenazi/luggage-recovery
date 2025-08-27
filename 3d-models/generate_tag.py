@@ -60,6 +60,7 @@ class Params:
     back_margin: float = 3.0
     back_text_style: str = "engrave"  # or "emboss"
     back_font_path: str | None = None
+    back_text_depth: float = 0.3
 
 
 def load_params(path: Path | None) -> Params:
@@ -223,7 +224,7 @@ def _text_solid_front(p: Params, width: float, height: float) -> cq.Workplane:
     wp = cq.Workplane("XY").workplane(offset=p.body_t / 2)
     txt = wp.center(x, y).rotate((0, 0, 0), (0, 0, 1), rot).text(
         p.front_prompt_text,
-        p.back_text_h if rot else p.back_text_h,
+        p.front_prompt_h,
         p.front_text_height if p.front_text_style == "emboss" else p.front_text_depth,
         kind="bold",
         cut=False,
@@ -249,7 +250,7 @@ def _text_solids_back(p: Params, width: float, height: float) -> cq.Workplane:
     solid = cq.Workplane("XY")
     for i, text in enumerate(lines):
         y = y0 - i * (p.back_text_h + p.back_line_gap)
-        t = wp.center(0, y).text(text, p.back_text_h, p.back_text_height if p.back_text_style == "emboss" else p.front_text_depth, kind="bold", cut=False, combine=True, font=p.back_font_path or "Sans")
+        t = wp.center(0, y).text(text, p.back_text_h, p.back_text_height if p.back_text_style == "emboss" else p.back_text_depth, kind="bold", cut=False, combine=True, font=p.back_font_path or "Sans")
         solid = solid.union(t)
     return solid
 
@@ -495,9 +496,52 @@ def build_and_export(
         base_with_text = base_with_text.union(back_text)
     if p.back_text_style == "engrave" and not back_text.val().isNull():
         # Ensure min wall
-        if p.body_t - p.front_text_depth < p.min_wall:
+        if p.body_t - p.back_text_depth < p.min_wall:
             raise ValueError("Back engraving violates minimum wall thickness")
         base_with_text = base_with_text.cut(back_text)
+
+    # Keep-out validation (strict): check XY bounding boxes of text against QR pocket, NFC, strap
+    if strict:
+        # QR pocket rect (front)
+        pocket_w = p.qr_w + p.fit_clearance
+        pocket_h = p.qr_h + p.fit_clearance
+        qr_rect = (-pocket_w/2, -pocket_h/2, pocket_w/2, pocket_h/2)
+        def wp_bbox_xy(wp: cq.Workplane):
+            if wp.val().isNull():
+                return None
+            bb = wp.val().BoundingBox()
+            return (bb.xmin, bb.ymin, bb.xmax, bb.ymax)
+        def rects_overlap(a, b):
+            return not (a[2] <= b[0] or a[0] >= b[2] or a[3] <= b[1] or a[1] >= b[3])
+        front_bb = wp_bbox_xy(front_text)
+        if front_bb and rects_overlap(front_bb, qr_rect):
+            raise ValueError("Front prompt intersects QR pocket keep-out")
+        # Back keep-outs: NFC circle and strap
+        nfc_r = (p.nfc_d + p.fit_clearance) / 2.0
+        def rect_circle_intersect(rect, cx, cy, r):
+            # clamp point
+            x = min(max(cx, rect[0]), rect[2])
+            y = min(max(cy, rect[1]), rect[3])
+            dx = x - cx; dy = y - cy
+            return dx*dx + dy*dy <= r*r + 1e-9
+        back_bb = wp_bbox_xy(back_text)
+        if back_bb and rect_circle_intersect(back_bb, 0.0, 0.0, nfc_r):
+            raise ValueError("Back text intersects NFC keep-out")
+        # Strap keep-out projection
+        strap_center_y = (p.qr_h + 2 * p.qr_border) / 2 - p.min_wall - ((p.strap_slot_l or p.strap_hole_d) / 2)
+        if p.strap_slot_w and p.strap_slot_l:
+            strap_rect = (-p.strap_slot_l/2, strap_center_y - p.strap_slot_w/2, p.strap_slot_l/2, strap_center_y + p.strap_slot_w/2)
+            if front_bb and rects_overlap(front_bb, strap_rect):
+                raise ValueError("Front prompt intersects strap slot keep-out")
+            if back_bb and rects_overlap(back_bb, strap_rect):
+                raise ValueError("Back text intersects strap slot keep-out")
+        else:
+            # hole circle
+            sr = p.strap_hole_d / 2.0
+            if front_bb and rect_circle_intersect(front_bb, 0.0, strap_center_y, sr):
+                raise ValueError("Front prompt intersects strap hole keep-out")
+            if back_bb and rect_circle_intersect(back_bb, 0.0, strap_center_y, sr):
+                raise ValueError("Back text intersects strap hole keep-out")
 
     if variant in ("base", "all"):
         path = out / "tag_base.stl"
@@ -574,6 +618,37 @@ def build_and_export(
                 export_stl(coupon, path, deterministic=deterministic)
                 manifest["files"][path.name] = {"sha256": _sha256(path)}
 
+    # Font hashes and text hashes
+    def _file_sha256(path: Path | None):
+        if path and path.exists():
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+        return None
+    manifest["front_font_sha256"] = _file_sha256(Path(p.front_font_path) if p.front_font_path else None)
+    manifest["back_font_sha256"] = _file_sha256(Path(p.back_font_path) if p.back_font_path else None)
+    # Text solids hashes via temporary STL bytes
+    def workplane_hash(wp: cq.Workplane) -> Optional[str]:
+        try:
+            if wp.val().isNull():
+                return None
+        except Exception:
+            return None
+        s = cq.exporters.toString(wp, 'STL')
+        if not s:
+            return None
+        b = s.encode('utf-8', errors='ignore')
+        return hashlib.sha256(b).hexdigest()
+    manifest["front_text_hash"] = workplane_hash(front_text)
+    manifest["back_text_hash"] = workplane_hash(back_text)
+    manifest["front_prompt_edge"] = p.front_prompt_edge
+    manifest["front_prompt_h"] = p.front_prompt_h
+    manifest["back_text_h"] = p.back_text_h
+    manifest["back_line_gap"] = p.back_line_gap
+    manifest["margins"] = {"front_prompt_margin": p.front_prompt_margin, "back_margin": p.back_margin}
+    # Keep-outs metadata
+    manifest["keepouts"] = {
+        "qr_pocket_rect": [qr_rect[0], qr_rect[1], qr_rect[2], qr_rect[3]],
+        "nfc_circle": {"cx": 0.0, "cy": 0.0, "r": nfc_r},
+    }
     # Write manifest and checksums
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
     with (out / "checksums.sha256").open('w') as f:
@@ -642,6 +717,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--back_margin", type=float)
     parser.add_argument("--back_text_style", choices=["emboss", "engrave"])
     parser.add_argument("--back_font_path", type=str)
+    parser.add_argument("--back_text_depth", type=float)
     parser.add_argument("--text_features", action="store_true")
     return parser.parse_args()
 
