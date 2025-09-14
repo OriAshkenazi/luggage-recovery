@@ -1,773 +1,215 @@
-"""Parametric luggage tag generator using CadQuery."""
+#!/usr/bin/env python3
+"""Dual-color luggage tag generator for BambuLab P1S with AMS."""
 
-from dataclasses import dataclass, asdict
-from pathlib import Path
-import os
-os.environ["PYGLET_HEADLESS"] = "True"
-import argparse
-import yaml
 import cadquery as cq
-import trimesh
-import hashlib
+import segno
+from pathlib import Path
 import json
-import random
-from typing import Optional, Iterable, Tuple, List
+import argparse
 
-# Optional PNG preview support
-try:
-    import cairosvg  # type: ignore
-except Exception:  # pragma: no cover - missing system cairo
-    cairosvg = None
-
-# QR encoder (pure-Python)
-try:
-    import segno  # type: ignore
-except Exception as e:  # pragma: no cover
-    segno = None
-
-
-@dataclass
-class Params:
-    qr_w: float = 50.0
-    qr_h: float = 30.0
-    qr_border: float = 3.0
-    body_t: float = 3.0
-    min_wall: float = 1.5
-    corner_r: float = 3.0
-    nfc_d: float = 25.0
-    nfc_depth: float = 1.0
-    fit_clearance: float = 0.25
-    strap_hole_d: float = 5.0
-    strap_slot_w: float = 0.0
-    strap_slot_l: float = 0.0
-    qr_pocket_depth: float = 0.2
-    island_h: float = 0.5
-    # Text params (front prompt)
-    front_prompt_text: str = "Scan me to find my owner"
-    front_prompt_h: float = 0.5
-    front_prompt_margin: float = 2.0
-    front_text_style: str = "emboss"  # or "engrave"
-    front_text_height: float = 0.5
-    front_text_depth: float = 0.3
-    front_font_path: str | None = None
-    front_prompt_edge: str = "bottom"  # top|bottom|left|right
-    # Text params (back)
-    back_name: str | None = None
-    back_phone: str | None = None
-    back_address: str | None = None
-    back_text_h: float = 4.0
-    back_line_gap: float = 1.5
-    back_margin: float = 3.0
-    back_text_style: str = "engrave"  # or "emboss"
-    back_font_path: str | None = None
-    back_text_depth: float = 0.3
-
-
-def load_params(path: Path | None) -> Params:
-    params = Params()
-    if path and path.exists():
-        data = yaml.safe_load(path.read_text())
-        for k, v in data.items():
-            setattr(params, k, v)
-    return params
-
-
-def apply_preset(params: Params, yaml_path: Optional[Path], preset: Optional[str]) -> Tuple[Params, Optional[float]]:
-    """Apply a material preset from params.yaml if provided.
-    Returns params and recommended layer height if present.
+def create_dual_color_luggage_tag(
+    width: float = 85.0,
+    height: float = 54.0,
+    thickness: float = 3.0,
+    qr_url: str = "https://oriashkenazi.github.io/luggage-recovery",
+    name: str = "Ori Ashkenazi",
+    phone: str = "+972-50-971-3042",
+    email: str = "oriashkenazi93@gmail.com",
+    output_dir: Path = Path("outputs")
+):
     """
-    rec_layer = None
-    if not preset:
-        return params, rec_layer
-    data = {}
-    if yaml_path and yaml_path.exists():
-        data = yaml.safe_load(yaml_path.read_text()) or {}
-    presets = (data or {}).get('presets', {})
-    prof = presets.get(preset)
-    if not prof:
-        raise ValueError(f"Unknown preset: {preset}")
-    for k in ('fit_clearance', 'corner_r', 'island_h'):
-        if k in prof:
-            setattr(params, k, float(prof[k]))
-    rec_layer = float(prof.get('recommended_layer_height')) if 'recommended_layer_height' in prof else None
-    return params, rec_layer
+    Create a dual-color luggage tag optimized for BambuLab P1S.
 
+    For dual-color printing:
+    - Base layer: Dark color (black, navy)
+    - Top layer: Light color (white, yellow)
+    - Both layers are FLUSH - same height, different colors
+    """
 
-def build_body(p: Params) -> tuple[cq.Workplane, float, float]:
-    """Build the tag body with pockets and strap feature."""
-    width = p.qr_w + 2 * p.qr_border
-    height = p.qr_h + 2 * p.qr_border
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    if p.nfc_depth + p.qr_pocket_depth > p.body_t - 0.6:
-        raise ValueError("Invalid pockets: nfc_depth + qr_pocket_depth must be <= body_t - 0.6")
+    print(f"Creating dual-color luggage tag: {width}×{height}×{thickness}mm")
 
-    body = (
+    # Create base shape - credit card proportions
+    base = (
         cq.Workplane("XY")
         .rect(width, height)
-        .extrude(p.body_t / 2, both=True)
+        .extrude(thickness)
+        .edges("|Z")
+        .fillet(4.0)
     )
-    body = body.edges("|Z").fillet(p.corner_r)
 
-    # Strap reinforcement and hole/slot
-    strap_center_y = height / 2 - p.min_wall - (
-        (p.strap_slot_l or p.strap_hole_d) / 2
-    )
-    if p.strap_slot_w and p.strap_slot_l:
-        pad_len = p.strap_slot_l + 2 * p.min_wall
-        pad_w = p.strap_slot_w + 2 * p.min_wall
-        pad = (
-            cq.Workplane("XY")
-            .center(0, strap_center_y)
-            .slot2D(pad_len, pad_w)
-            .extrude(p.body_t / 2, both=True)
-        )
-        body = body.union(pad)
-        body = (
-            body.faces(">Z")
-            .workplane()
-            .center(0, strap_center_y)
-            .slot2D(p.strap_slot_l, p.strap_slot_w)
-            .cutThruAll()
-        )
-    else:
-        pad_d = p.strap_hole_d + 2 * p.min_wall
-        pad = (
-            cq.Workplane("XY")
-            .center(0, strap_center_y)
-            .circle(pad_d / 2)
-            .extrude(p.body_t / 2, both=True)
-        )
-        body = body.union(pad)
-        body = (
-            body.faces(">Z")
-            .workplane()
-            .center(0, strap_center_y)
-            .circle(p.strap_hole_d / 2)
-            .cutThruAll()
-        )
+    # Add strap hole in top-left corner, away from content
+    hole_x = -width/2 + 12  # 12mm from left edge
+    hole_y = height/2 - 10   # 10mm from top edge
+    hole_diameter = 6.0
 
-    body = body.edges(">Z").fillet(0.5)
-
-    # Front QR pocket
-    pocket_w = p.qr_w + p.fit_clearance
-    pocket_h = p.qr_h + p.fit_clearance
-    body = (
-        body.faces(">Z")
+    base = (
+        base.faces(">Z")
         .workplane()
-        .rect(pocket_w, pocket_h)
-        .cutBlind(-p.qr_pocket_depth)
+        .center(hole_x, hole_y)
+        .circle(hole_diameter/2)
+        .cutThruAll()
     )
 
-    # Back NFC recess
-    body = (
-        body.faces("<Z")
-        .workplane()
-        .circle((p.nfc_d + p.fit_clearance) / 2)
-        .cutBlind(-p.nfc_depth)
-    )
+    # Create the top surface features (for dual-color)
+    # These will be the light color areas
+    features = cq.Workplane("XY").workplane(offset=thickness)
 
-    return body, width, height
+    # 1. Large QR Code - 25mm for better scanning
+    print("Generating QR code...")
+    qr_size = 25.0
+    qr_x = -width/2 + qr_size/2 + 8  # 8mm from left edge
+    qr_y = 0  # Center vertically
 
+    qr = segno.make(qr_url, error='m')
+    matrix_size = qr.symbol_size()
+    modules = matrix_size[0]
+    module_size = qr_size / modules
 
-def build_islands(p: Params) -> cq.Workplane:
-    outer_w = p.qr_w + 2 * p.qr_border
-    outer_h = p.qr_h + 2 * p.qr_border
-    pocket_w = p.qr_w + p.fit_clearance
-    pocket_h = p.qr_h + p.fit_clearance
-    ring = (
-        cq.Workplane("XY")
-        .rect(outer_w, outer_h)
-        .rect(pocket_w, pocket_h)
-        .extrude(p.island_h)
-        .translate((0, 0, p.body_t / 2))
-    )
-    strap_center_y = outer_h / 2 - p.min_wall - ((p.strap_slot_l or p.strap_hole_d) / 2)
-    if p.strap_slot_w and p.strap_slot_l:
-        ring = (
-            ring.faces(">Z")
-            .workplane()
-            .center(0, strap_center_y)
-            .slot2D(p.strap_slot_l, p.strap_slot_w)
-            .cutThruAll()
-        )
-    else:
-        ring = (
-            ring.faces(">Z")
-            .workplane()
-            .center(0, strap_center_y)
-            .circle(p.strap_hole_d / 2)
-            .cutThruAll()
-        )
-    ring = ring.edges("|Z").fillet(0.5)
-    return ring
+    print(f"QR code: {modules}×{modules} modules, {module_size:.2f}mm per module")
 
+    # Create QR code pattern
+    for row_idx, row in enumerate(qr.matrix_iter(scale=1, border=0)):
+        for col_idx, is_dark in enumerate(row):
+            if is_dark:  # Dark modules will be the BASE color (showing through)
+                continue  # Skip - let base show through
+            else:  # Light modules will be FEATURES color (top layer)
+                x = qr_x - qr_size/2 + (col_idx + 0.5) * module_size
+                y = qr_y + qr_size/2 - (row_idx + 0.5) * module_size
 
-def _text_solid_front(p: Params, width: float, height: float) -> cq.Workplane:
-    if not p.front_prompt_text:
-        return cq.Workplane("XY")
-    edge = p.front_prompt_edge.lower()
-    margin = p.front_prompt_margin
-    # Position line near chosen edge
-    x = 0.0
-    y = 0.0
-    rot = 0
-    if edge == "top":
-        y = height / 2 - margin
-    elif edge == "bottom":
-        y = -height / 2 + margin
-    elif edge == "left":
-        x = -width / 2 + margin
-        rot = 90
-    else:  # right
-        x = width / 2 - margin
-        rot = 90
-    wp = cq.Workplane("XY").workplane(offset=p.body_t / 2)
-    txt = wp.center(x, y).rotate((0, 0, 0), (0, 0, 1), rot).text(
-        p.front_prompt_text,
-        p.front_prompt_h,
-        p.front_text_height if p.front_text_style == "emboss" else p.front_text_depth,
-        kind="bold",
-        cut=False,
-        combine=True,
-        font=p.front_font_path or "Sans",
-    )
-    if p.front_text_style == "emboss":
-        return txt
-    else:
-        # Engrave: cut into base later by using it as cutter
-        return txt
-
-
-def _text_solids_back(p: Params, width: float, height: float) -> cq.Workplane:
-    lines = [s for s in [p.back_name, p.back_phone, p.back_address] if s]
-    if not lines:
-        return cq.Workplane("XY")
-    # Compute layout area (back face): respect margins and NFC/strap keep-outs crudely by using inner rectangle
-    inner_w = width - 2 * p.back_margin
-    inner_h = height - 2 * p.back_margin
-    wp = cq.Workplane("XY").workplane(offset=-p.body_t / 2)
-    y0 = inner_h / 2 - p.back_text_h  # start near top of inner rect
-    solid = cq.Workplane("XY")
-    for i, text in enumerate(lines):
-        y = y0 - i * (p.back_text_h + p.back_line_gap)
-        t = wp.center(0, y).text(text, p.back_text_h, p.back_text_height if p.back_text_style == "emboss" else p.back_text_depth, kind="bold", cut=False, combine=True, font=p.back_font_path or "Sans")
-        solid = solid.union(t)
-    return solid
-
-
-def build_qr_islands(p: Params, qr_text: Optional[str], qr_svg: Optional[Path]) -> Tuple[cq.Workplane, dict]:
-    if not qr_text and not qr_svg:
-        # fallback to ring islands for backward compatibility
-        return build_islands(p), {"mode": "ring"}
-    if segno is None:
-        raise RuntimeError("QR features requested but segno is not available. Add segno to requirements.")
-    if qr_text:
-        qr = segno.make(qr_text, error='m')
-        payload_hash = hashlib.sha256(qr_text.encode('utf-8')).hexdigest()
-    else:
-        # Load external SVG as QR, segno can open only text; we approximate by embedding
-        svg_data = Path(qr_svg).read_bytes()
-        qr = segno.make(svg_data, micro=False)  # might fail; best-effort
-        payload_hash = hashlib.sha256(svg_data).hexdigest()
-    # Matrix including quiet zone when asked; we'll explicitly add quiet zone modules = 4
-    msize = qr.symbol_size(quiet_zone=4)
-    modules = msize[0]  # width in modules including quiet zone
-    qz = 4
-    pocket_w = p.qr_w + p.fit_clearance
-    pocket_h = p.qr_h + p.fit_clearance
-    module_size = min(pocket_w / modules, pocket_h / modules)
-    # Build dark module squares
-    wp = cq.Workplane("XY")
-    # Origin align so that QR is centered in pocket
-    total_w = modules * module_size
-    total_h = modules * module_size
-    x0 = -total_w / 2
-    y0 = -total_h / 2
-    dark_count = 0
-    for r, row in enumerate(qr.matrix_iter(scale=1, border=qz)):
-        for c, bit in enumerate(row):
-            if bit:  # dark
-                dark_count += 1
-                cx = x0 + (c + 0.5) * module_size
-                cy = y0 + (r + 0.5) * module_size
-                wp = wp.union(
-                    cq.Workplane("XY").center(cx, cy).rect(module_size, module_size).extrude(p.island_h).translate((0, 0, p.body_t / 2))
-                )
-    meta = {
-        "mode": "qr",
-        "qr_payload_hash": payload_hash,
-        "module_size_mm": round(module_size, 4),
-        "quiet_zone_mm": round(qz * module_size, 4),
-        "dark_modules": dark_count,
-        "island_h": p.island_h,
-    }
-    return wp, meta
-
-
-def _triangulate_and_write(mesh: trimesh.Trimesh, path: Path, deterministic: bool) -> None:
-    # enforce face ordering determinism by sorting on quantized vertex coords
-    if deterministic:
-        verts = mesh.vertices
-        faces = mesh.faces
-        # build sort keys per face
-        def face_key(fi: int):
-            pts = verts[faces[fi]]
-            # quantize to 1e-6 mm
-            q = (pts * 1e6).round().astype(int).tolist()
-            # sort vertices within face for stability
-            q.sort()
-            return q
-
-        order = sorted(range(len(mesh.faces)), key=face_key)
-        mesh = trimesh.Trimesh(vertices=mesh.vertices.copy(), faces=mesh.faces[order].copy(), process=False)
-    # Write binary STL with fixed header
-    header = b"CadQuery deterministic STL\x00".ljust(80, b"\x00")
-    data = trimesh.exchange.stl.export_stl(mesh, header=header)
-    path.write_bytes(data)
-
-
-def export_stl(model: cq.Workplane, path: Path, *, deterministic: bool = False) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    # stable tessellation params
-    cq.exporters.export(model, str(path), tolerance=1e-3, angularTolerance=0.1)
-    mesh = trimesh.load_mesh(path)
-    if not mesh.is_watertight:
-        raise ValueError(f"Mesh {path} is not watertight")
-    _triangulate_and_write(mesh, path, deterministic)
-
-
-def color_switch_layer_index(island_h: float, layer_height: float) -> int:
-    layer = max(1, round(island_h / layer_height))
-    return layer
-
-
-def hash_mesh(path: Path) -> str:
-    mesh = trimesh.load_mesh(path)
-    data = mesh.vertices.tobytes() + mesh.faces.tobytes()
-    return hashlib.sha256(data).hexdigest()
-def save_preview_svg(path: Path, model: cq.Workplane, flip: bool = False) -> Path:
-    m = model.rotate((0, 0, 0), (1, 0, 0), 180) if flip else model
-    cq.exporters.export(m, str(path))
-    return path
-
-
-def save_preview_png(path: Path, svg_source: Path) -> Optional[Path]:
-    if cairosvg is None:
-        return None
-    cairosvg.svg2png(url=str(svg_source), write_to=str(path))
-    return path
-
-
-def export_sticker_svg(out: Path, p: Params, qr_text: Optional[str], qr_svg: Optional[Path], *, module_size_mm: Optional[float] = None, quiet_zone_mod: int = 4) -> Tuple[Path, Optional[Path]]:
-    """Export a 30x50 mm sticker SVG (and optional PNG) with registration marks.
-    Returns (svg_path, png_path)."""
-    if segno is None:
-        raise RuntimeError("Sticker export requires segno (pure-Python QR library)")
-    if qr_text:
-        qr = segno.make(qr_text, error='m')
-    else:
-        # Fallback: simple QR with repo URL if none provided
-        payload = (Path(qr_svg).read_text() if qr_svg else "") or "https://example.com"
-        qr = segno.make(payload, error='m')
-    size = qr.symbol_size(quiet_zone=quiet_zone_mod)
-    modules = size[0]
-    if module_size_mm is None:
-        module_size_mm = min(p.qr_w / modules, p.qr_h / modules)
-    total_w = modules * module_size_mm
-    total_h = modules * module_size_mm
-    # Sticker canvas: 50 x 30 mm
-    W, H = p.qr_w, p.qr_h
-    # Center QR in canvas
-    x0 = (W - total_w) / 2
-    y0 = (H - total_h) / 2
-    # Build SVG content
-    svg_path = out / "qr_sticker_30x50.svg"
-    parts: List[str] = []
-    parts.append(f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}mm" height="{H}mm" viewBox="0 0 {W} {H}">')
-    # Background
-    parts.append(f'<rect x="0" y="0" width="{W}" height="{H}" fill="#fff"/>')
-    # Safe margin (1 mm inset outline)
-    parts.append('<rect x="1" y="1" width="%s" height="%s" fill="none" stroke="#000" stroke-dasharray="2,2" stroke-width="0.2"/>' % (W-2, H-2))
-    # Registration marks (2mm circles)
-    parts.append('<circle cx="3" cy="3" r="1" fill="none" stroke="#000" stroke-width="0.2"/>')
-    parts.append('<circle cx="%s" cy="%s" r="1" fill="none" stroke="#000" stroke-width="0.2"/>' % (W-3, H-3))
-    # QR modules
-    for r, row in enumerate(qr.matrix_iter(scale=1, border=quiet_zone_mod)):
-        for c, bit in enumerate(row):
-            if bit:
-                x = x0 + c * module_size_mm
-                y = y0 + r * module_size_mm
-                parts.append('<rect x="%0.4f" y="%0.4f" width="%0.4f" height="%0.4f" fill="#000"/>' % (x, y, module_size_mm, module_size_mm))
-    parts.append('</svg>')
-    svg_path.write_text("\n".join(parts))
-    png_path: Optional[Path] = None
-    if cairosvg is not None:
-        png_path = out / "qr_sticker_30x50.png"
-        cairosvg.svg2png(url=str(svg_path), write_to=str(png_path))
-    return svg_path, png_path
-
-
-def _validate_inputs(p: Params) -> None:
-    if p.qr_w <= 0 or p.qr_h <= 0:
-        raise ValueError("qr_w and qr_h must be positive")
-    if p.qr_border < 1.0:
-        raise ValueError("qr_border must be >= 1.0 mm")
-    if p.body_t < 2.5:
-        raise ValueError("body_t must be >= 2.5 mm")
-    if p.min_wall < 1.5:
-        raise ValueError("min_wall must be >= 1.5 mm")
-    if p.nfc_depth + p.qr_pocket_depth > p.body_t - 0.6:
-        raise ValueError("Invalid pockets: nfc_depth + qr_pocket_depth must be <= body_t - 0.6")
-
-
-def _two_tone_asserts(p: Params, base_path: Path, feat_path: Path) -> None:
-    b = trimesh.load_mesh(base_path)
-    f = trimesh.load_mesh(feat_path)
-    # XY AABB equal
-    assert abs((b.bounds[0][0] - f.bounds[0][0])) < 1e-3 and abs((b.bounds[1][0] - f.bounds[1][0])) < 1e-3
-    assert abs((b.bounds[0][1] - f.bounds[0][1])) < 1e-3 and abs((b.bounds[1][1] - f.bounds[1][1])) < 1e-3
-    # Z contact
-    assert abs(b.bounds[1][2] - p.body_t / 2) < 1e-3
-    assert abs(f.bounds[0][2] - p.body_t / 2) < 1e-3
-    # No overlap
-    assert b.bounds[1][2] <= f.bounds[0][2] + 1e-6
-
-
-def _geom_integrity_checks(p: Params, model: cq.Workplane, strict: bool = False) -> None:
-    # Strap reinforcement thickness heuristic: check that local pad adds at least ~0.5 mm above body_t.
-    # We do a coarse check using bounding box deltas across strap y region.
-    try:
-        mesh = trimesh.load_mesh(trimesh.exchange.stl.export_stl(cq.exporters.toString(model, 'STL')))
-    except Exception:
-        return
-    ok = True
-    if not mesh.is_watertight:
-        ok = False
-    if not ok and strict:
-        raise ValueError("Geometry integrity failed: mesh not watertight")
-
-
-def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def build_and_export(
-    p: Params,
-    out: Path,
-    variant: str,
-    *,
-    previews: str = "svg",
-    deterministic: bool = False,
-    layer_height: Optional[float] = None,
-    strict: bool = False,
-    emit_coupons: Optional[Iterable[str]] = None,
-    preset: Optional[str] = None,
-    qr_text: Optional[str] = None,
-    qr_svg: Optional[Path] = None,
-    text_features: bool = False,
-) -> Path:
-    _validate_inputs(p)
-    if deterministic:
-        os.environ["PYTHONHASHSEED"] = "0"
-        random.seed(0)
-    body, width, height = build_body(p)
-    base = body
-    islands, qrmeta = build_qr_islands(p, qr_text, qr_svg)
-    out.mkdir(parents=True, exist_ok=True)
-    manifest = {"parameters": asdict(p), "files": {}, "deterministic": deterministic}
-    if preset:
-        manifest["preset"] = preset
-    if qrmeta:
-        manifest.update(qrmeta)
-    if layer_height:
-        manifest["color_switch_layer"] = color_switch_layer_index(p.island_h, layer_height)
-
-    # Export variants
-    # Front/back text solids
-    front_text = _text_solid_front(p, width, height)
-    back_text = _text_solids_back(p, width, height)
-    # Apply text to base
-    base_with_text = base
-    if p.front_text_style == "emboss" and not front_text.val().isNull():
-        base_with_text = base_with_text.union(front_text)
-    if p.front_text_style == "engrave" and not front_text.val().isNull():
-        base_with_text = base_with_text.cut(front_text)
-    if p.back_text_style == "emboss" and not back_text.val().isNull():
-        base_with_text = base_with_text.union(back_text)
-    if p.back_text_style == "engrave" and not back_text.val().isNull():
-        # Ensure min wall
-        if p.body_t - p.back_text_depth < p.min_wall:
-            raise ValueError("Back engraving violates minimum wall thickness")
-        base_with_text = base_with_text.cut(back_text)
-
-    # Keep-out validation (strict): check XY bounding boxes of text against QR pocket, NFC, strap
-    if strict:
-        # QR pocket rect (front)
-        pocket_w = p.qr_w + p.fit_clearance
-        pocket_h = p.qr_h + p.fit_clearance
-        qr_rect = (-pocket_w/2, -pocket_h/2, pocket_w/2, pocket_h/2)
-        def wp_bbox_xy(wp: cq.Workplane):
-            if wp.val().isNull():
-                return None
-            bb = wp.val().BoundingBox()
-            return (bb.xmin, bb.ymin, bb.xmax, bb.ymax)
-        def rects_overlap(a, b):
-            return not (a[2] <= b[0] or a[0] >= b[2] or a[3] <= b[1] or a[1] >= b[3])
-        front_bb = wp_bbox_xy(front_text)
-        if front_bb and rects_overlap(front_bb, qr_rect):
-            raise ValueError("Front prompt intersects QR pocket keep-out")
-        # Back keep-outs: NFC circle and strap
-        nfc_r = (p.nfc_d + p.fit_clearance) / 2.0
-        def rect_circle_intersect(rect, cx, cy, r):
-            # clamp point
-            x = min(max(cx, rect[0]), rect[2])
-            y = min(max(cy, rect[1]), rect[3])
-            dx = x - cx; dy = y - cy
-            return dx*dx + dy*dy <= r*r + 1e-9
-        back_bb = wp_bbox_xy(back_text)
-        if back_bb and rect_circle_intersect(back_bb, 0.0, 0.0, nfc_r):
-            raise ValueError("Back text intersects NFC keep-out")
-        # Strap keep-out projection
-        strap_center_y = (p.qr_h + 2 * p.qr_border) / 2 - p.min_wall - ((p.strap_slot_l or p.strap_hole_d) / 2)
-        if p.strap_slot_w and p.strap_slot_l:
-            strap_rect = (-p.strap_slot_l/2, strap_center_y - p.strap_slot_w/2, p.strap_slot_l/2, strap_center_y + p.strap_slot_w/2)
-            if front_bb and rects_overlap(front_bb, strap_rect):
-                raise ValueError("Front prompt intersects strap slot keep-out")
-            if back_bb and rects_overlap(back_bb, strap_rect):
-                raise ValueError("Back text intersects strap slot keep-out")
-        else:
-            # hole circle
-            sr = p.strap_hole_d / 2.0
-            if front_bb and rect_circle_intersect(front_bb, 0.0, strap_center_y, sr):
-                raise ValueError("Front prompt intersects strap hole keep-out")
-            if back_bb and rect_circle_intersect(back_bb, 0.0, strap_center_y, sr):
-                raise ValueError("Back text intersects strap hole keep-out")
-
-    if variant in ("base", "all"):
-        path = out / "tag_base.stl"
-        export_stl(base_with_text.union(islands), path, deterministic=deterministic)
-        manifest["files"][str(path.name)] = {"sha256": _sha256(path)}
-        # Previews
-        if previews in ("svg", "png"):
-            svg = out / "preview_front.svg"
-            save_preview_svg(svg, base.union(islands))
-            manifest["files"][svg.name] = {"sha256": _sha256(svg)}
-            if previews == "png":
-                png = out / "preview_front.png"
-                if save_preview_png(png, svg):
-                    manifest["files"][png.name] = {"sha256": _sha256(png)}
-                else:
-                    print("[warn] PNG preview unavailable; falling back to SVG")
-        if previews in ("svg", "png"):
-            svg = out / "preview_back.svg"
-            save_preview_svg(svg, base.union(islands).rotate((0, 0, 0), (1, 0, 0), 180))
-            manifest["files"][svg.name] = {"sha256": _sha256(svg)}
-            if previews == "png":
-                png = out / "preview_back.png"
-                if save_preview_png(png, svg):
-                    manifest["files"][png.name] = {"sha256": _sha256(png)}
-                else:
-                    print("[warn] PNG preview unavailable; falling back to SVG")
-
-    if variant in ("flat", "all"):
-        path = out / "tag_alt_flat_front.stl"
-        export_stl(base, path, deterministic=deterministic)
-        manifest["files"][str(path.name)] = {"sha256": _sha256(path)}
-
-    if variant in ("islands", "all"):
-        path_b = out / "tag_alt_qr_islands_base.stl"
-        path_f = out / "tag_alt_qr_islands_features.stl"
-        export_stl(base_with_text, path_b, deterministic=deterministic)
-        export_stl(islands, path_f, deterministic=deterministic)
-        manifest["files"][str(path_b.name)] = {"sha256": _sha256(path_b)}
-        manifest["files"][str(path_f.name)] = {"sha256": _sha256(path_f)}
-        _two_tone_asserts(p, path_b, path_f)
-
-    # Optional text features for two-tone printing
-    if text_features:
-        if not front_text.val().isNull():
-            pth = out / "front_text_features.stl"
-            export_stl(front_text, pth, deterministic=deterministic)
-            manifest["files"][pth.name] = {"sha256": _sha256(pth)}
-        if not back_text.val().isNull() and p.back_text_style == "emboss":
-            pth = out / "back_text_features.stl"
-            export_stl(back_text, pth, deterministic=deterministic)
-            manifest["files"][pth.name] = {"sha256": _sha256(pth)}
-
-    # Optional coupons
-    if emit_coupons:
-        for token in emit_coupons:
-            token = token.strip().lower()
-            if token == "nfc":
-                coupon = (
+                square = (
                     cq.Workplane("XY")
-                    .circle((p.nfc_d + p.fit_clearance) / 2)
-                    .extrude(p.nfc_depth)
+                    .workplane(offset=thickness)
+                    .center(x, y)
+                    .rect(module_size * 0.9, module_size * 0.9)
+                    .extrude(0.0001)  # Infinitesimally thin - just marks the area
                 )
-                path = out / "coupon_nfc.stl"
-                export_stl(coupon, path, deterministic=deterministic)
-                manifest["files"][path.name] = {"sha256": _sha256(path)}
-            if token == "strap":
-                if p.strap_slot_w and p.strap_slot_l:
-                    coupon = cq.Workplane("XY").slot2D(p.strap_slot_l, p.strap_slot_w).extrude(p.body_t)
-                    name = "coupon_strap_slot.stl"
-                else:
-                    coupon = cq.Workplane("XY").circle(p.strap_hole_d / 2).extrude(p.body_t)
-                    name = "coupon_strap_hole.stl"
-                path = out / name
-                export_stl(coupon, path, deterministic=deterministic)
-                manifest["files"][path.name] = {"sha256": _sha256(path)}
+                features = features.union(square)
 
-    # Font hashes and text hashes
-    def _file_sha256(path: Path | None):
-        if path and path.exists():
-            return hashlib.sha256(path.read_bytes()).hexdigest()
-        return None
-    manifest["front_font_sha256"] = _file_sha256(Path(p.front_font_path) if p.front_font_path else None)
-    manifest["back_font_sha256"] = _file_sha256(Path(p.back_font_path) if p.back_font_path else None)
-    # Text solids hashes via temporary STL bytes
-    def workplane_hash(wp: cq.Workplane) -> Optional[str]:
-        try:
-            if wp.val().isNull():
-                return None
-        except Exception:
-            return None
-        s = cq.exporters.toString(wp, 'STL')
-        if not s:
-            return None
-        b = s.encode('utf-8', errors='ignore')
-        return hashlib.sha256(b).hexdigest()
-    manifest["front_text_hash"] = workplane_hash(front_text)
-    manifest["back_text_hash"] = workplane_hash(back_text)
-    manifest["front_prompt_edge"] = p.front_prompt_edge
-    manifest["front_prompt_h"] = p.front_prompt_h
-    manifest["back_text_h"] = p.back_text_h
-    manifest["back_line_gap"] = p.back_line_gap
-    manifest["margins"] = {"front_prompt_margin": p.front_prompt_margin, "back_margin": p.back_margin}
-    # Keep-outs metadata
-    manifest["keepouts"] = {
-        "qr_pocket_rect": [qr_rect[0], qr_rect[1], qr_rect[2], qr_rect[3]],
-        "nfc_circle": {"cx": 0.0, "cy": 0.0, "r": nfc_r},
+    # 2. Header text - away from hole
+    header = "FOUND MY LUGGAGE?"
+    header_x = 0  # Center
+    header_y = height/2 - 8  # Near top, below hole area
+
+    header_text = (
+        cq.Workplane("XY")
+        .workplane(offset=thickness)
+        .center(header_x, header_y)
+        .text(header, 4.5, 0.0001, font="Liberation Sans", combine=True)
+    )
+    features = features.union(header_text)
+
+    # 3. Contact info - right side
+    contact_x = width/2 - 25  # 25mm from right edge
+    contact_y_start = 8
+    line_spacing = 5.5
+
+    contact_lines = [
+        (name, 5.0),
+        (phone, 4.0),
+        (email, 3.5)
+    ]
+
+    for i, (text, font_size) in enumerate(contact_lines):
+        y_pos = contact_y_start - i * line_spacing
+
+        line_text = (
+            cq.Workplane("XY")
+            .workplane(offset=thickness)
+            .center(contact_x, y_pos)
+            .text(text, font_size, 0.0001, font="Liberation Sans", combine=True)
+        )
+        features = features.union(line_text)
+
+    # 4. Footer call-to-action
+    footer = "SCAN QR OR CALL/TEXT"
+    footer_y = -height/2 + 6  # Near bottom
+
+    footer_text = (
+        cq.Workplane("XY")
+        .workplane(offset=thickness)
+        .center(0, footer_y)
+        .text(footer, 3.8, 0.0001, font="Liberation Sans", combine=True)
+    )
+    features = features.union(footer_text)
+
+    # Export files
+    print("Exporting STL files...")
+
+    # Base layer (dark color - black/navy)
+    base_file = output_dir / "luggage_tag_base.stl"
+    cq.exporters.export(base, str(base_file))
+
+    # Features layer (light color - white/yellow)
+    features_file = output_dir / "luggage_tag_features.stl"
+    cq.exporters.export(features, str(features_file))
+
+    # Combined preview
+    combined = base.union(features)
+    preview_file = output_dir / "luggage_tag_combined.stl"
+    cq.exporters.export(combined, str(preview_file))
+
+    # Create QR test image
+    qr_test = output_dir / "qr_test.png"
+    qr.save(qr_test, scale=8, border=2)
+
+    # Create printing instructions
+    instructions = {
+        "bambulab_p1s_setup": {
+            "slicer": "BambuStudio or Bambu Handy",
+            "layer_height": "0.2mm",
+            "base_color": "Dark (black, navy, etc.) - AMS Slot 1",
+            "feature_color": "Light (white, yellow, etc.) - AMS Slot 2",
+            "color_change_layer": int(thickness / 0.2),
+            "print_time": "~25 minutes"
+        },
+        "files": {
+            "base": base_file.name,
+            "features": features_file.name,
+            "preview": preview_file.name,
+            "qr_test": qr_test.name
+        },
+        "tag_info": {
+            "dimensions": f"{width}×{height}×{thickness}mm",
+            "qr_size": f"{qr_size}mm",
+            "qr_url": qr_url,
+            "contact": f"{name} | {phone} | {email}"
+        }
     }
-    # Write manifest and checksums
-    (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
-    with (out / "checksums.sha256").open('w') as f:
-        for name, info in sorted(manifest["files"].items()):
-            f.write(f"{info['sha256']}  {name}\n")
-    # Sticker templates
-    try:
-        ssvg, spng = export_sticker_svg(out, p, qr_text, qr_svg, module_size_mm=qrmeta.get('module_size_mm') if 'qrmeta' in locals() else None)
-        manifest["files"][ssvg.name] = {"sha256": _sha256(ssvg)}
-        if spng:
-            manifest["files"][spng.name] = {"sha256": _sha256(spng)}
-        (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
-        with (out / "checksums.sha256").open('a') as f:
-            f.write(f"{_sha256(ssvg)}  {ssvg.name}\n")
-            if spng:
-                f.write(f"{_sha256(spng)}  {spng.name}\n")
-    except Exception as e:
-        print(f"[warn] Sticker export failed: {e}")
-    return out
 
+    (output_dir / "instructions.json").write_text(json.dumps(instructions, indent=2))
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate luggage tag STLs")
-    parser.add_argument("--out", type=Path, default=Path("3d-models/outputs"))
-    parser.add_argument("--variant", choices=["all", "base", "flat", "islands"], default="all")
-    parser.add_argument("--params", type=Path)
-    # Parameter overrides
-    parser.add_argument("--qr_w", type=float)
-    parser.add_argument("--qr_h", type=float)
-    parser.add_argument("--qr_border", type=float)
-    parser.add_argument("--body_t", type=float)
-    parser.add_argument("--min_wall", type=float)
-    parser.add_argument("--corner_r", type=float)
-    parser.add_argument("--nfc_d", type=float)
-    parser.add_argument("--nfc_depth", type=float)
-    parser.add_argument("--fit_clearance", type=float)
-    parser.add_argument("--strap_hole_d", type=float)
-    parser.add_argument("--hole", type=float, help="Diameter for strap hole (mm)")
-    parser.add_argument("--slot", type=str, help="WIDTHxLENGTH for strap slot")
-    parser.add_argument("--qr_pocket_depth", type=float)
-    parser.add_argument("--island_h", type=float)
-    # Behavior flags
-    parser.add_argument("--previews", choices=["none", "svg", "png"], default="svg")
-    parser.add_argument("--deterministic", action="store_true")
-    parser.add_argument("--layer_height", type=float)
-    parser.add_argument("--strict", action="store_true")
-    parser.add_argument("--ci", action="store_true")
-    parser.add_argument("--emit_coupons", type=str, help="Comma-separated: nfc,strap")
-    parser.add_argument("--preset", choices=["pla", "petg", "abs"])
-    parser.add_argument("--qr_text", type=str)
-    parser.add_argument("--qr_svg", type=Path)
-    # Text CLI
-    parser.add_argument("--front_prompt_text", type=str)
-    parser.add_argument("--front_prompt_h", type=float)
-    parser.add_argument("--front_prompt_margin", type=float)
-    parser.add_argument("--front_text_style", choices=["emboss", "engrave"])
-    parser.add_argument("--front_text_height", type=float)
-    parser.add_argument("--front_text_depth", type=float)
-    parser.add_argument("--front_font_path", type=str)
-    parser.add_argument("--front_prompt_edge", choices=["top", "bottom", "left", "right"])
-    parser.add_argument("--back_name", type=str)
-    parser.add_argument("--back_phone", type=str)
-    parser.add_argument("--back_address", type=str)
-    parser.add_argument("--back_text_h", type=float)
-    parser.add_argument("--back_line_gap", type=float)
-    parser.add_argument("--back_margin", type=float)
-    parser.add_argument("--back_text_style", choices=["emboss", "engrave"])
-    parser.add_argument("--back_font_path", type=str)
-    parser.add_argument("--back_text_depth", type=float)
-    parser.add_argument("--text_features", action="store_true")
-    return parser.parse_args()
+    print(f"✅ Dual-color luggage tag complete!")
+    print(f"📁 Output: {output_dir}")
+    print(f"🎨 Color change at layer {instructions['bambulab_p1s_setup']['color_change_layer']}")
+    print(f"📱 QR size: {qr_size}mm (scannable)")
 
-
-def apply_overrides(p: Params, args: argparse.Namespace) -> None:
-    for field in asdict(p).keys():
-        val = getattr(args, field, None)
-        if val is not None:
-            setattr(p, field, val)
-    # CLI contracts: explicit --hole or --slot
-    if getattr(args, "hole", None) is not None:
-        p.strap_hole_d = float(args.hole)
-        p.strap_slot_w = 0.0
-        p.strap_slot_l = 0.0
-    if args.slot:
-        w, l = args.slot.lower().split("x")
-        p.strap_slot_w = float(w)
-        p.strap_slot_l = float(l)
-        p.strap_hole_d = 0.0
-
+    return output_dir
 
 def main():
-    args = parse_args()
-    params = load_params(getattr(args, "params", None))
-    # Apply preset first (yaml then preset), then CLI overrides
-    preset_name = getattr(args, 'preset', None)
-    try:
-        params, rec_layer = apply_preset(params, getattr(args, "params", None), preset_name)
-    except Exception as e:
-        raise
-    apply_overrides(params, args)
-    coupons = None
-    if args.emit_coupons:
-        coupons = [t.strip() for t in args.emit_coupons.split(',') if t.strip()]
-    strict = args.strict or args.ci or bool(os.getenv('CI'))
-    build_and_export(
-        params,
-        args.out,
-        args.variant,
-        previews=args.previews,
-        deterministic=args.deterministic,
-        layer_height=args.layer_height,
-        strict=strict,
-        emit_coupons=coupons,
-        preset=preset_name,
-        qr_text=getattr(args, 'qr_text', None),
-        qr_svg=getattr(args, 'qr_svg', None),
-        text_features=getattr(args, 'text_features', False),
-    )
+    parser = argparse.ArgumentParser(description="Generate dual-color luggage tag for BambuLab P1S")
+    parser.add_argument("--width", type=float, default=85.0, help="Tag width in mm")
+    parser.add_argument("--height", type=float, default=54.0, help="Tag height in mm")
+    parser.add_argument("--thickness", type=float, default=3.0, help="Tag thickness in mm")
+    parser.add_argument("--url", default="https://oriashkenazi.github.io/luggage-recovery", help="QR code URL")
+    parser.add_argument("--name", default="Ori Ashkenazi", help="Your name")
+    parser.add_argument("--phone", default="+972-50-971-3042", help="Phone number")
+    parser.add_argument("--email", default="oriashkenazi93@gmail.com", help="Email address")
+    parser.add_argument("--out", type=Path, default=Path("outputs"), help="Output directory")
 
+    args = parser.parse_args()
+
+    create_dual_color_luggage_tag(
+        width=args.width,
+        height=args.height,
+        thickness=args.thickness,
+        qr_url=args.url,
+        name=args.name,
+        phone=args.phone,
+        email=args.email,
+        output_dir=args.out
+    )
 
 if __name__ == "__main__":
     main()
