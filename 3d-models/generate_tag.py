@@ -15,7 +15,8 @@ def create_dual_color_luggage_tag(
     name: str = "Ori Ashkenazi",
     phone: str = "+972-50-971-3042",
     email: str = "oriashkenazi93@gmail.com",
-    output_dir: Path = Path("outputs")
+    output_dir: Path = Path("outputs"),
+    reversible: bool = True
 ):
     """
     Create a dual-color luggage tag optimized for BambuLab P1S.
@@ -84,26 +85,34 @@ def create_dual_color_luggage_tag(
                 x = qr_x - qr_size/2 + (col_idx + 0.5) * module_size
                 y = qr_y + qr_size/2 - (row_idx + 0.5) * module_size
 
+                # For reversible tags, QR should also not go through full thickness
+                qr_depth = thickness * 0.8 if reversible else thickness
+
                 light_square = (
                     cq.Workplane("XY")
                     .center(x, y)
                     .rect(module_size * 0.85, module_size * 0.85)
-                    .extrude(thickness)  # Same height as base
+                    .extrude(qr_depth)
                 )
                 features = features.union(light_square)
 
     # 2. Text features with validated CSS-like positioning
     print("Creating text features with validated positions...")
 
-    # Header text - positioned away from hole and QR
-    header = "FOUND MY LUGGAGE?"
+    # For reversible tags, text depth should be less than thickness
+    # so it doesn't go all the way through (which would be mirrored on back)
+    text_depth = thickness * 0.8 if reversible else thickness
+
+    # Header text - ALL CAPS with Assistant font, readable both sides
+    header = "FOUND MY LUGGAGE?"  # Already caps
     header_x = 0  # Center horizontally
     header_y = content_top - 6  # Near top with safe margin
 
+    # Create text that's readable from both sides (not mirrored)
     header_text = (
         cq.Workplane("XY")
         .center(header_x, header_y)
-        .text(header, 4.0, thickness, font="Liberation Sans", combine=True)
+        .text(header, 4.0, text_depth, font="Assistant", combine=True)
     )
     features = features.union(header_text)
 
@@ -120,9 +129,9 @@ def create_dual_color_luggage_tag(
     line_spacing = 5.2
 
     contact_lines = [
-        (name, 4.2),
-        (phone, 3.8),
-        (email, 3.2)
+        (name.upper(), 4.2),  # ALL CAPS
+        (phone.upper(), 3.8),  # ALL CAPS
+        (email.upper(), 3.2)   # ALL CAPS
     ]
 
     for i, (text, font_size) in enumerate(contact_lines):
@@ -131,19 +140,19 @@ def create_dual_color_luggage_tag(
         line_text = (
             cq.Workplane("XY")
             .center(contact_x, y_pos)
-            .text(text, font_size, thickness, font="Liberation Sans", combine=True)
+            .text(text, font_size, text_depth, font="Assistant", combine=True)
         )
         features = features.union(line_text)
 
-    # Footer - bottom center
-    footer = "SCAN QR OR CALL/TEXT"
+    # Footer - bottom center, ALL CAPS
+    footer = "SCAN QR OR CALL/TEXT"  # Already caps
     footer_x = 0
     footer_y = content_bottom + 4  # Near bottom with margin
 
     footer_text = (
         cq.Workplane("XY")
         .center(footer_x, footer_y)
-        .text(footer, 3.5, thickness, font="Liberation Sans", combine=True)
+        .text(footer, 3.5, text_depth, font="Assistant", combine=True)
     )
     features = features.union(footer_text)
 
