@@ -53,10 +53,12 @@ def create_dual_color_luggage_tag(
         .cutThruAll()
     )
 
-    print("Creating features with validated CSS-like layout...")
+    print("Creating features for BOTH sides (truly reversible)...")
 
     # Create all the features that will be the second color (light)
-    features = cq.Workplane("XY")
+    # Features will exist on BOTH sides of the tag
+    features_front = cq.Workplane("XY")
+    features_back = cq.Workplane("XY")
 
     # CSS-validated layout positions
     content_margin = 4.0
@@ -65,8 +67,8 @@ def create_dual_color_luggage_tag(
     content_top = height/2 - content_margin
     content_bottom = -height/2 + content_margin
 
-    # 1. QR Code - positioned in left half, away from hole
-    print("Generating QR code...")
+    # 1. QR Code - create on BOTH sides for true reversibility
+    print("Generating QR code for BOTH sides...")
     qr_size = 26.0  # Optimized size for dual-layout
     qr_x = content_left + qr_size/2 + 4  # Closer to left edge for more right space
     qr_y = -2  # Slightly below center to avoid hole area
@@ -78,43 +80,56 @@ def create_dual_color_luggage_tag(
 
     print(f"QR code: {modules}×{modules} modules, {module_size:.2f}mm per module")
 
-    # Create QR light modules (will be second color)
+    # Create QR light modules for FRONT side
     for row_idx, row in enumerate(qr.matrix_iter(scale=1, border=0)):
         for col_idx, is_dark in enumerate(row):
             if not is_dark:  # Light modules = second color features
                 x = qr_x - qr_size/2 + (col_idx + 0.5) * module_size
                 y = qr_y + qr_size/2 - (row_idx + 0.5) * module_size
 
-                # For reversible tags, QR should also not go through full thickness
-                qr_depth = thickness * 0.8 if reversible else thickness
-
-                light_square = (
+                # Front side QR (from bottom up)
+                front_square = (
                     cq.Workplane("XY")
                     .center(x, y)
                     .rect(module_size * 0.85, module_size * 0.85)
-                    .extrude(qr_depth)
+                    .extrude(thickness / 2)  # Half thickness
                 )
-                features = features.union(light_square)
+                features_front = features_front.union(front_square)
 
-    # 2. Text features with validated CSS-like positioning
-    print("Creating text features with validated positions...")
+                # Back side QR (from top down, NOT mirrored)
+                back_square = (
+                    cq.Workplane("XY")
+                    .workplane(offset=thickness)
+                    .center(x, y)  # Same position, not mirrored
+                    .rect(module_size * 0.85, module_size * 0.85)
+                    .extrude(-thickness / 2)  # Extrude downward
+                )
+                features_back = features_back.union(back_square)
 
-    # For reversible tags, text depth should be less than thickness
-    # so it doesn't go all the way through (which would be mirrored on back)
-    text_depth = thickness * 0.8 if reversible else thickness
+    # 2. Text features on BOTH sides for true reversibility
+    print("Creating text features on BOTH sides...")
 
     # Header text - ALL CAPS with Assistant font, readable both sides
     header = "FOUND MY LUGGAGE?"  # Already caps
     header_x = 0  # Center horizontally
     header_y = content_top - 6  # Near top with safe margin
 
-    # Create text that's readable from both sides (not mirrored)
-    header_text = (
+    # Front side header (from bottom up)
+    header_front = (
         cq.Workplane("XY")
         .center(header_x, header_y)
-        .text(header, 4.0, text_depth, font="Assistant", combine=True)
+        .text(header, 4.0, thickness / 2, font="Assistant", combine=True)
     )
-    features = features.union(header_text)
+    features_front = features_front.union(header_front)
+
+    # Back side header (from top down, NOT mirrored)
+    header_back = (
+        cq.Workplane("XY")
+        .workplane(offset=thickness)
+        .center(header_x, header_y)  # Same position
+        .text(header, 4.0, -thickness / 2, font="Assistant", combine=True)
+    )
+    features_back = features_back.union(header_back)
 
     # Contact info - positioned in available space after QR
     # QR occupies from qr_x-qr_size/2 to qr_x+qr_size/2
@@ -137,28 +152,51 @@ def create_dual_color_luggage_tag(
     for i, (text, font_size) in enumerate(contact_lines):
         y_pos = contact_y_start - i * line_spacing
 
-        line_text = (
+        # Front side contact line
+        line_front = (
             cq.Workplane("XY")
             .center(contact_x, y_pos)
-            .text(text, font_size, text_depth, font="Assistant", combine=True)
+            .text(text, font_size, thickness / 2, font="Assistant", combine=True)
         )
-        features = features.union(line_text)
+        features_front = features_front.union(line_front)
 
-    # Footer - bottom center, ALL CAPS
+        # Back side contact line (NOT mirrored)
+        line_back = (
+            cq.Workplane("XY")
+            .workplane(offset=thickness)
+            .center(contact_x, y_pos)  # Same position
+            .text(text, font_size, -thickness / 2, font="Assistant", combine=True)
+        )
+        features_back = features_back.union(line_back)
+
+    # Footer - bottom center, ALL CAPS on BOTH sides
     footer = "SCAN QR OR CALL/TEXT"  # Already caps
     footer_x = 0
     footer_y = content_bottom + 4  # Near bottom with margin
 
-    footer_text = (
+    # Front side footer
+    footer_front = (
         cq.Workplane("XY")
         .center(footer_x, footer_y)
-        .text(footer, 3.5, text_depth, font="Assistant", combine=True)
+        .text(footer, 3.5, thickness / 2, font="Assistant", combine=True)
     )
-    features = features.union(footer_text)
+    features_front = features_front.union(footer_front)
 
-    print("Performing boolean operations...")
+    # Back side footer (NOT mirrored)
+    footer_back = (
+        cq.Workplane("XY")
+        .workplane(offset=thickness)
+        .center(footer_x, footer_y)  # Same position
+        .text(footer, 3.5, -thickness / 2, font="Assistant", combine=True)
+    )
+    features_back = features_back.union(footer_back)
+
+    # Combine all features from both sides
+    all_features = features_front.union(features_back)
+
+    print("Performing boolean operations for truly reversible tag...")
     # Create base with features subtracted (first color - dark)
-    base_with_holes = base.cut(features)
+    base_with_holes = base.cut(all_features)
 
     # Export files
     print("Exporting STL files...")
@@ -167,9 +205,9 @@ def create_dual_color_luggage_tag(
     base_file = output_dir / "luggage_tag_base.stl"
     cq.exporters.export(base_with_holes, str(base_file))
 
-    # Features (second color - light)
+    # Features (second color - light) - now includes both sides
     features_file = output_dir / "luggage_tag_features.stl"
-    cq.exporters.export(features, str(features_file))
+    cq.exporters.export(all_features, str(features_file))
 
     # Combined preview (original full base)
     preview_file = output_dir / "luggage_tag_combined.stl"
