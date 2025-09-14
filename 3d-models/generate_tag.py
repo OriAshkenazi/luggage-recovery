@@ -64,11 +64,11 @@ def create_dual_color_luggage_tag(
     content_top = height/2 - content_margin
     content_bottom = -height/2 + content_margin
 
-    # 1. QR Code - positioned away from hole
+    # 1. QR Code - positioned in left half, away from hole
     print("Generating QR code...")
-    qr_size = 28.0  # Reduced to fit layout properly
-    qr_x = content_left + qr_size/2 + 6  # Safe distance from hole
-    qr_y = -3  # Slightly below center to avoid hole area
+    qr_size = 26.0  # Optimized size for dual-layout
+    qr_x = content_left + qr_size/2 + 4  # Closer to left edge for more right space
+    qr_y = -2  # Slightly below center to avoid hole area
 
     qr = segno.make(qr_url, error='m')
     matrix_size = qr.symbol_size()
@@ -107,10 +107,17 @@ def create_dual_color_luggage_tag(
     )
     features = features.union(header_text)
 
-    # Contact info - right side, avoiding QR code
-    contact_x = qr_x + qr_size/2 + 12  # Right of QR with clearance
-    contact_y_start = 6
-    line_spacing = 4.8  # Tighter spacing to fit
+    # Contact info - positioned in available space after QR
+    # QR occupies from qr_x-qr_size/2 to qr_x+qr_size/2
+    qr_right_edge = qr_x + qr_size/2
+    available_right_space = content_right - qr_right_edge
+
+    print(f"Layout check: QR right edge at {qr_right_edge:.1f}, available space: {available_right_space:.1f}mm")
+
+    # Position contact text in the center of available right space
+    contact_x = qr_right_edge + available_right_space/2
+    contact_y_start = 8  # Higher up to use vertical space better
+    line_spacing = 5.2
 
     contact_lines = [
         (name, 4.2),
