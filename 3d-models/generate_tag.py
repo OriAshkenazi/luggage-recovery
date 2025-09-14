@@ -39,9 +39,9 @@ def create_dual_color_luggage_tag(
         .fillet(4.0)
     )
 
-    # Add strap hole in top-left corner, away from content
-    hole_x = -width/2 + 12  # 12mm from left edge
-    hole_y = height/2 - 10   # 10mm from top edge
+    # Add strap hole - positioned to avoid content conflicts
+    hole_x = -width/2 + 10  # 10mm from left edge
+    hole_y = height/2 - 8    # 8mm from top edge
     hole_diameter = 6.0
 
     base = (
@@ -52,39 +52,23 @@ def create_dual_color_luggage_tag(
         .cutThruAll()
     )
 
-    print("Creating base layer (dark color)...")
-    # Base layer - this will be the dark color and forms the substrate
+    print("Creating features with validated CSS-like layout...")
 
-    print("Creating top layer (light color)...")
-    # Top layer - this will be the light color, starts at top of base
-    top_layer_thickness = 0.6  # 3 layers at 0.2mm = substantial enough for slicer
+    # Create all the features that will be the second color (light)
+    features = cq.Workplane("XY")
 
-    # Create a top layer plate that covers the entire tag
-    top_layer = (
-        cq.Workplane("XY")
-        .workplane(offset=thickness)
-        .rect(width, height)
-        .extrude(top_layer_thickness)
-        .edges("|Z")
-        .fillet(4.0)
-    )
+    # CSS-validated layout positions
+    content_margin = 4.0
+    content_left = -width/2 + content_margin
+    content_right = width/2 - content_margin
+    content_top = height/2 - content_margin
+    content_bottom = -height/2 + content_margin
 
-    # Add the same strap hole to top layer
-    top_layer = (
-        top_layer.faces("<Z")  # Bottom face of top layer
-        .workplane()
-        .center(hole_x, hole_y)
-        .circle(hole_diameter/2)
-        .cutThruAll()
-    )
-
-    # Now CUT OUT areas where we want the base (dark) color to show through
-
-    # 1. QR Code - cut out DARK modules (let base show through)
-    print("Generating QR code pattern...")
-    qr_size = 25.0
-    qr_x = -width/2 + qr_size/2 + 8  # 8mm from left edge
-    qr_y = 0  # Center vertically
+    # 1. QR Code - positioned away from hole
+    print("Generating QR code...")
+    qr_size = 28.0  # Reduced to fit layout properly
+    qr_x = content_left + qr_size/2 + 6  # Safe distance from hole
+    qr_y = -3  # Slightly below center to avoid hole area
 
     qr = segno.make(qr_url, error='m')
     matrix_size = qr.symbol_size()
@@ -93,60 +77,45 @@ def create_dual_color_luggage_tag(
 
     print(f"QR code: {modules}×{modules} modules, {module_size:.2f}mm per module")
 
-    # Create cuts for dark QR modules
-    qr_cuts = cq.Workplane("XY").workplane(offset=thickness)
-
+    # Create QR light modules (will be second color)
     for row_idx, row in enumerate(qr.matrix_iter(scale=1, border=0)):
         for col_idx, is_dark in enumerate(row):
-            if is_dark:  # Dark modules - CUT from top layer (let base show)
+            if not is_dark:  # Light modules = second color features
                 x = qr_x - qr_size/2 + (col_idx + 0.5) * module_size
                 y = qr_y + qr_size/2 - (row_idx + 0.5) * module_size
 
-                cut_square = (
+                light_square = (
                     cq.Workplane("XY")
-                    .workplane(offset=thickness)
                     .center(x, y)
                     .rect(module_size * 0.85, module_size * 0.85)
-                    .extrude(top_layer_thickness)
+                    .extrude(thickness)  # Same height as base
                 )
-                qr_cuts = qr_cuts.union(cut_square)
+                features = features.union(light_square)
 
-    # Cut the QR dark modules from top layer
-    try:
-        top_layer = top_layer.cut(qr_cuts)
-    except:
-        print("Warning: QR cuts failed, continuing without cuts")
+    # 2. Text features with validated CSS-like positioning
+    print("Creating text features with validated positions...")
 
-    # 2. Create text areas that will be LIGHT color (keep in top layer)
-    # We don't cut these - they stay as part of the top layer
-
-    print("Creating text areas (staying in top layer)...")
-
-    # Create raised text areas to ensure good layering
-    text_height = 0.2  # Slightly raised above the base top layer
-
-    # Header text
+    # Header text - positioned away from hole and QR
     header = "FOUND MY LUGGAGE?"
-    header_x = 0
-    header_y = height/2 - 8
+    header_x = 0  # Center horizontally
+    header_y = content_top - 6  # Near top with safe margin
 
     header_text = (
         cq.Workplane("XY")
-        .workplane(offset=thickness + top_layer_thickness)
         .center(header_x, header_y)
-        .text(header, 4.5, text_height, font="Liberation Sans", combine=True)
+        .text(header, 4.0, thickness, font="Liberation Sans", combine=True)
     )
+    features = features.union(header_text)
 
-    # Contact info
-    contact_x = width/2 - 25
-    contact_y_start = 8
-    line_spacing = 5.5
-    contact_text = cq.Workplane("XY")
+    # Contact info - right side, avoiding QR code
+    contact_x = qr_x + qr_size/2 + 12  # Right of QR with clearance
+    contact_y_start = 6
+    line_spacing = 4.8  # Tighter spacing to fit
 
     contact_lines = [
-        (name, 5.0),
-        (phone, 4.0),
-        (email, 3.5)
+        (name, 4.2),
+        (phone, 3.8),
+        (email, 3.2)
     ]
 
     for i, (text, font_size) in enumerate(contact_lines):
@@ -154,42 +123,41 @@ def create_dual_color_luggage_tag(
 
         line_text = (
             cq.Workplane("XY")
-            .workplane(offset=thickness + top_layer_thickness)
             .center(contact_x, y_pos)
-            .text(text, font_size, text_height, font="Liberation Sans", combine=True)
+            .text(text, font_size, thickness, font="Liberation Sans", combine=True)
         )
-        contact_text = contact_text.union(line_text)
+        features = features.union(line_text)
 
-    # Footer
+    # Footer - bottom center
     footer = "SCAN QR OR CALL/TEXT"
-    footer_y = -height/2 + 6
+    footer_x = 0
+    footer_y = content_bottom + 4  # Near bottom with margin
 
     footer_text = (
         cq.Workplane("XY")
-        .workplane(offset=thickness + top_layer_thickness)
-        .center(0, footer_y)
-        .text(footer, 3.8, text_height, font="Liberation Sans", combine=True)
+        .center(footer_x, footer_y)
+        .text(footer, 3.5, thickness, font="Liberation Sans", combine=True)
     )
+    features = features.union(footer_text)
 
-    # Add all text to top layer
-    all_text = header_text.union(contact_text).union(footer_text)
-    top_layer = top_layer.union(all_text)
+    print("Performing boolean operations...")
+    # Create base with features subtracted (first color - dark)
+    base_with_holes = base.cut(features)
 
     # Export files
     print("Exporting STL files...")
 
-    # Base layer (dark color - black/navy)
+    # Base with holes (first color - dark)
     base_file = output_dir / "luggage_tag_base.stl"
-    cq.exporters.export(base, str(base_file))
+    cq.exporters.export(base_with_holes, str(base_file))
 
-    # Top layer (light color - white/yellow)
-    top_file = output_dir / "luggage_tag_top.stl"
-    cq.exporters.export(top_layer, str(top_file))
+    # Features (second color - light)
+    features_file = output_dir / "luggage_tag_features.stl"
+    cq.exporters.export(features, str(features_file))
 
-    # Combined preview
-    combined = base.union(top_layer)
+    # Combined preview (original full base)
     preview_file = output_dir / "luggage_tag_combined.stl"
-    cq.exporters.export(combined, str(preview_file))
+    cq.exporters.export(base, str(preview_file))
 
     # Create QR test image
     qr_test = output_dir / "qr_test.png"
@@ -207,7 +175,7 @@ def create_dual_color_luggage_tag(
         },
         "files": {
             "base": base_file.name,
-            "top": top_file.name,
+            "features": features_file.name,
             "preview": preview_file.name,
             "qr_test": qr_test.name
         },
