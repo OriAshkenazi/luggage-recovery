@@ -40,15 +40,12 @@
     <!-- Top language selector -->
     <div class="top-bar">
         <div class="top-bar-content">
-            <div class="language-toggle" role="group" aria-label="Language selection">
-                <button type="button" class="lang-toggle lang-toggle--active" data-lang="en" aria-label="English">
-                    <span class="lang-flag">🇺🇸</span>
-                    <span class="lang-text">English</span>
-                </button>
-                <button type="button" class="lang-toggle" data-lang="he" aria-label="עברית">
-                    <span class="lang-flag">🇮🇱</span>
-                    <span class="lang-text">עברית</span>
-                </button>
+            <div class="language-selector">
+                <label for="language-select" class="sr-only">Language selection</label>
+                <select id="language-select" class="language-dropdown" aria-label="Choose language">
+                    <option value="en" selected>English</option>
+                    <option value="he">עברית</option>
+                </select>
             </div>
         </div>
     </div>
@@ -71,48 +68,48 @@
             
             <div class="contact-buttons">
                 <!-- Primary: WhatsApp -->
-                <a href="https://wa.me/972509713042?text=Hi%20Ori%2C%20I%20found%20your%20luggage!%20Please%20let%20me%20know%20how%20to%20return%20it." 
-                   class="contact-btn contact-btn--primary whatsapp-btn" 
-                   target="_blank" 
+                <a href="https://wa.me/972509713042?text=Hi%20Ori%2C%20I%20found%20your%20luggage!%20Please%20let%20me%20know%20how%20to%20return%20it."
+                   class="contact-btn contact-btn--primary contact-btn--prominent whatsapp-btn"
+                   target="_blank"
                    rel="noopener noreferrer"
                    aria-label="Contact via WhatsApp - Opens in new window">
                     <span class="btn-icon" role="img" aria-hidden="true">📱</span>
                     <span class="btn-text">
-                        <span class="btn-title" data-i18n="contact.whatsapp">WhatsApp</span>
-                        <span class="btn-subtitle" data-i18n="contact.whatsapp_sub">Fastest response</span>
+                        <span class="btn-title" data-i18n="contact.whatsapp">WhatsApp Message</span>
+                        <span class="btn-subtitle" data-i18n="contact.whatsapp_sub">Fastest response • +972-50-971-3042</span>
                     </span>
                 </a>
                 
                 <!-- Secondary: SMS -->
-                <a href="sms:+972509713042?body=Hi%20Ori%2C%20I%20found%20your%20luggage!%20How%20can%20I%20return%20it%20to%20you%3F" 
+                <a href="sms:+972509713042?body=Hi%20Ori%2C%20I%20found%20your%20luggage!%20How%20can%20I%20return%20it%20to%20you%3F"
                    class="contact-btn contact-btn--secondary sms-btn"
                    aria-label="Send SMS text message">
                     <span class="btn-icon" role="img" aria-hidden="true">💬</span>
                     <span class="btn-text">
                         <span class="btn-title" data-i18n="contact.sms">Send SMS</span>
-                        <span class="btn-subtitle phone-number" dir="ltr">+972&#8209;50&#8209;971&#8209;3042</span>
+                        <span class="btn-subtitle" data-i18n="contact.sms_sub">Text message</span>
                     </span>
                 </a>
                 
                 <!-- Tertiary: Email -->
-                <a href="mailto:oriashkenazi93@gmail.com?subject=Found%20Your%20Luggage&body=Hi%20Ori%2C%0A%0AI%20found%20your%20luggage!%20How%20can%20I%20return%20it%20to%20you%3F%0A%0ALocation%3A%20%0ATime%3A%20%0A%0AThank%20you!" 
+                <a href="mailto:oriashkenazi93@gmail.com?subject=Found%20Your%20Luggage&body=Hi%20Ori%2C%0A%0AI%20found%20your%20luggage!%20How%20can%20I%20return%20it%20to%20you%3F%0A%0ALocation%3A%20%0ATime%3A%20%0A%0AThank%20you!"
                    class="contact-btn contact-btn--tertiary email-btn"
                    aria-label="Send email">
                     <span class="btn-icon" role="img" aria-hidden="true">📧</span>
                     <span class="btn-text">
                         <span class="btn-title" data-i18n="contact.email">Send Email</span>
-                        <span class="btn-subtitle">oriashkenazi93@gmail.com</span>
+                        <span class="btn-subtitle" data-i18n="contact.email_sub">Email message</span>
                     </span>
                 </a>
                 
                 <!-- Call button -->
-                <a href="tel:+972509713042" 
+                <a href="tel:+972509713042"
                    class="contact-btn contact-btn--call call-btn"
                    aria-label="Call phone number">
                     <span class="btn-icon" role="img" aria-hidden="true">📞</span>
                     <span class="btn-text">
                         <span class="btn-title" data-i18n="contact.call">Call</span>
-                        <span class="btn-subtitle phone-number" dir="ltr">+972&#8209;50&#8209;971&#8209;3042</span>
+                        <span class="btn-subtitle" data-i18n="contact.call_sub">Phone call</span>
                     </span>
                 </a>
             </div>

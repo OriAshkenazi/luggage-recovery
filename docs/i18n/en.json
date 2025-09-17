@@ -8,11 +8,14 @@
   },
   "contact": {
     "title": "Contact Me",
-    "whatsapp": "WhatsApp",
-    "whatsapp_sub": "Fastest response",
+    "whatsapp": "WhatsApp Message",
+    "whatsapp_sub": "Fastest response • +972-50-971-3042",
     "sms": "Send SMS",
+    "sms_sub": "Text message",
     "email": "Send Email",
-    "call": "Call"
+    "email_sub": "Email message",
+    "call": "Call",
+    "call_sub": "Phone call"
   },
   "form": {
     "title": "Send a Message",

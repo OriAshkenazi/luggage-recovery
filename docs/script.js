@@ -197,12 +197,10 @@
         },
 
         updateActiveButton(lang) {
-            utils.$$('.lang-toggle').forEach(btn => {
-                utils.removeClass(btn, 'lang-toggle--active');
-                if (btn.getAttribute('data-lang') === lang) {
-                    utils.addClass(btn, 'lang-toggle--active');
-                }
-            });
+            const languageSelect = utils.$('#language-select');
+            if (languageSelect) {
+                languageSelect.value = lang;
+            }
         },
 
         applyTranslations() {
@@ -246,15 +244,14 @@
         },
 
         setupLanguageSwitcher() {
-            const langButtons = utils.$$('.lang-toggle');
-            
-            langButtons.forEach(btn => {
-                utils.on(btn, 'click', async (e) => {
-                    e.preventDefault();
-                    const lang = btn.getAttribute('data-lang');
+            const languageSelect = utils.$('#language-select');
+
+            if (languageSelect) {
+                utils.on(languageSelect, 'change', async (e) => {
+                    const lang = e.target.value;
                     await this.setLanguage(lang);
                 });
-            });
+            }
         }
     };
 
