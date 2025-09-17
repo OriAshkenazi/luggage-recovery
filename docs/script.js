@@ -372,7 +372,6 @@
             if (!this.form) return;
 
             this.setupValidation();
-            this.setupSubmission();
             this.setupAutoSave();
         },
 
