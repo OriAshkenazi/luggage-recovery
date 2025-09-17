@@ -121,11 +121,14 @@
                 If the above methods don't work, please fill out this form:
             </p>
             
-            <form class="contact-form" 
-                  action="https://formspree.io/f/xdknzpko" 
+            <form class="contact-form"
+                  action="https://api.web3forms.com/submit"
                   method="POST"
                   novalidate>
-                
+
+                <!-- Web3Forms Access Key - REPLACE WITH YOUR KEY -->
+                <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE">
+
                 <div class="form-group">
                     <label for="finder-name" class="form-label" data-i18n="form.name">Your Name</label>
                     <input type="text" 
