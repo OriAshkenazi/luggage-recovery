@@ -42,3 +42,5 @@ build/
 coverage.xml
 *.egg-info/
 registry.jsonl
+node_modules/
+web/node_modules/
