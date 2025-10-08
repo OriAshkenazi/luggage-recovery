@@ -1,0 +1,128 @@
+/**
+ * Layout CSS - Grid system, positioning, and responsive structure
+ * Handles the overall page layout and tag positioning system
+ */
+
+/* Base layout */
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  color: var(--fg);
+  background: var(--surface);
+}
+
+.wrap {
+  max-width: 1100px;
+  margin: 16px auto;
+  padding: 0 16px;
+}
+
+/* Tag container and layout */
+.tag {
+  position: relative;
+  width: var(--tag-w);
+  height: var(--tag-h);
+  background: var(--bg);
+  border: 0.6mm solid var(--fg);
+  border-radius: var(--radius);
+  margin: 7mm auto;
+  overflow: hidden;
+  box-shadow: 0 1.5mm 4mm rgba(0, 0, 0, 0.08);
+}
+
+/* CSS Grid Layout for tag content */
+.content {
+  position: absolute;
+  top: var(--outer-t);
+  left: var(--outer-l);
+  right: var(--outer-r);
+  bottom: var(--outer-b);
+  display: grid;
+  grid-template-columns: var(--qr-col, 80mm) var(--gutter, 3mm) var(--text-col, 100mm) var(--slit-col-front, 0mm);
+  grid-template-areas: "qr-col gutter-spacer text-col slit-col";
+  gap: 0;
+}
+
+/* Mirrored tag positioning */
+.tag.mirrored { /* No transform - show face-on */ }
+.tag.mirrored .content { /* Swap columns for back side */
+  grid-template-columns: var(--slit-col-back, 0mm) var(--text-col, 100mm) var(--gutter, 3mm) var(--qr-col, 80mm);
+  grid-template-areas: "slit-col text-col gutter-spacer qr-col";
+}
+
+/* Back side content has its own slit column; no extra shift */
+
+/* Grid areas */
+.qr-col {
+  grid-area: qr-col;
+  padding: var(--qr-pad-t) var(--qr-pad-r) var(--qr-pad-b) var(--qr-pad-l);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  background: var(--bg);
+  overflow: visible;
+}
+
+.gutter-spacer {
+  grid-area: gutter-spacer;
+  /* Empty spacer for gutter column */
+}
+
+.text-col {
+  grid-area: text-col;
+  position: relative;
+  padding: calc(var(--tx-pad-t) + var(--text-cap, 0mm)) var(--tx-pad-r) var(--tx-pad-b) var(--tx-pad-l);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 3mm;
+  background: var(--bg);
+  align-content: start;
+  box-sizing: border-box;
+}
+/* Slit in dedicated grid column */
+.slit-col {
+  grid-area: slit-col;
+  display: grid;
+  align-items: center;
+  justify-items: start;
+}
+
+.slit {
+  width: var(--slit-width, 3mm);
+  height: var(--slit-height, 12mm);
+  border: 0.6mm solid #000;
+  border-radius: calc(var(--slit-width, 3mm) / 2);
+  background: transparent;
+  box-sizing: border-box;
+  margin-left: var(--slit-margin-l, 0mm);
+  margin-right: var(--slit-margin-r, 0mm);
+}
+
+.tag.mirrored .slit {
+  margin-left: var(--slit-margin-r, 0mm);
+  margin-right: var(--slit-margin-l, 0mm);
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .wrap {
+    padding: 0 8px;
+  }
+
+  .tag {
+    transform: scale(0.8);
+    transform-origin: center;
+  }
+}
+
+/* Print optimizations */
+@media print {
+  body {
+    background: white;
+  }
+
+  .tag {
+    margin: 0;
+    page-break-inside: avoid;
+  }
+}

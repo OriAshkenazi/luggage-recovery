@@ -1,0 +1,35 @@
+{
+  "dimensions_mm": {
+    "w": 188.4,
+    "h": 89.0,
+    "t": 3.0
+  },
+  "hole": {
+    "cx": 77.2,
+    "cy": 27.5,
+    "d": 8.0
+  },
+  "qr": {
+    "size": 74.0,
+    "modules": 37,
+    "module_mm": 2.0,
+    "url": "https://oriashkenazi.github.io/luggage-recovery",
+    "min_ok": true,
+    "min_target_mm": 2.0
+  },
+  "stacking": {
+    "top": "non-mirrored",
+    "bottom": "mirrored across YZ (horizontal)",
+    "web_mm": 0.4,
+    "half_depth_mm": 1.3
+  },
+  "font": {
+    "name": "/Users/oriashkenazi/luggage-recovery/assets/fonts/SF-Pro-Rounded-Bold.otf",
+    "path": "/Users/oriashkenazi/luggage-recovery/assets/fonts/SF-Pro-Rounded-Bold.otf",
+    "kind": "bold"
+  },
+  "files": {
+    "base": "reversible_tag_base.stl",
+    "features": "reversible_tag_features.stl"
+  }
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Luggage Tag App</title>
+    <script src="assets/js/qrcode.js"></script>
+</head>
+<body>
+    <h1>Debug Page</h1>
+    <div id="app"></div>
+    <div id="debug-output"></div>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            document.getElementById('debug-output').innerHTML += '<p>' + message + '</p>';
+        }
+
+        log('Page loaded');
+
+        // Check if QRCode library is available
+        if (typeof QRCode !== 'undefined') {
+            log('✅ QRCode library is available');
+        } else {
+            log('❌ QRCode library NOT available');
+        }
+
+        // Check if app div exists
+        const app = document.getElementById('app');
+        if (app) {
+            log('✅ App div found');
+        } else {
+            log('❌ App div NOT found');
+        }
+
+        // Try to create a simple element
+        try {
+            const testEl = document.createElement('h2');
+            testEl.textContent = 'Test Header Created by JS';
+            app.appendChild(testEl);
+            log('✅ Successfully created and appended test element');
+        } catch (error) {
+            log('❌ Error creating element: ' + error.message);
+        }
+
+        // Test QR generation if library is available
+        if (typeof QRCode !== 'undefined') {
+            try {
+                const canvas = document.createElement('canvas');
+                QRCode.toCanvas(canvas, 'https://example.com/test', function (error) {
+                    if (error) {
+                        log('❌ QR generation failed: ' + error.message);
+                    } else {
+                        log('✅ QR generation successful');
+                        app.appendChild(canvas);
+                    }
+                });
+            } catch (error) {
+                log('❌ QR generation error: ' + error.message);
+            }
+        }
+
+        log('Debug script completed');
+    </script>
+</body>
+</html>

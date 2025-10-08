@@ -1,0 +1,184 @@
+/**
+ * Component CSS - Visual styling for tag components
+ * QR code box, text elements, and visual appearance
+ */
+
+/* QR Code Component */
+.qr-box {
+  position: relative;
+  width: var(--qr-inner);
+  height: var(--qr-inner);
+  background: var(--bg);
+  border: 0.2mm solid rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+.qr-box::after {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--qr-quiet-mm, 0mm));
+  border: 0.2mm dashed rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  display: none;
+}
+
+html.has-quiet .qr-box::after {
+  display: block;
+}
+
+/* Optional debug outline */
+.debug-mode .qr-box { outline: 1px solid #000; }
+
+.qr-box .qr-placeholder {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+}
+
+/* Individual QR modules (when generated) */
+.qr-module {
+  position: absolute;
+  background: #000;
+  width: var(--qr-module);
+  height: var(--qr-module);
+}
+
+.qr-module.light {
+  background: transparent;
+}
+
+/* Text Components */
+.text-col .header {
+  font-family: 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--fs-header);
+  font-weight: bold;
+  line-height: 1.1;
+  text-align: left;
+  margin: 0;
+}
+
+.text-col .contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  align-self: center;
+}
+
+.text-col .name {
+  font-family: 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--fs-name);
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0;
+  margin-bottom: 2mm; /* Space between name and phone */
+}
+
+.text-col .phone {
+  font-family: 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--fs-phone);
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.text-col .email {
+  font-family: 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--fs-email);
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0;
+  word-break: break-all;
+}
+
+.text-col .footer {
+  font-family: 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: var(--fs-footer);
+  font-weight: bold;
+  line-height: 1.1;
+  text-align: left;
+  margin: 0;
+  align-self: end;
+}
+
+/* Visual enhancements */
+.text-col .header,
+.text-col .footer {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.contact-info .name,
+.contact-info .phone,
+.contact-info .email {
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Debug mode styling */
+.debug-mode .qr-col {
+  background: var(--debug-qr) !important;
+  outline: 2px dashed red;
+}
+
+.debug-mode .text-col {
+  background: var(--debug-text) !important;
+  outline: 2px dashed green;
+}
+
+.debug-mode .tag {
+  outline: 3px solid var(--debug-outline);
+}
+
+.debug-mode .slit {
+  outline: 2px solid orange;
+  background: rgba(255, 165, 0, 0.2) !important;
+}
+
+/* Metrics display */
+.metrics {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 12px;
+  background: #f5f5f5;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 8px;
+  white-space: pre-line;
+}
+
+.metrics.error {
+  background: #fee;
+  border-color: #fcc;
+  color: #c33;
+}
+
+/* Animation for dynamic updates */
+.tag * {
+  transition: all 0.2s ease;
+}
+
+.qr-box {
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .tag {
+    border-width: 3px;
+  }
+
+  .qr-box {
+    outline-width: 3px;
+  }
+
+  .slit {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .tag * {
+    transition: none;
+  }
+}

@@ -16,7 +16,7 @@ def create_dual_color_luggage_tag(
     phone: str = "+972-50-971-3042",
     email: str = "oriashkenazi93@gmail.com",
     output_dir: Path = Path("outputs"),
-    reversible: bool = True
+    reversible: bool = False  # Simplified for performance
 ):
     """
     Create a dual-color luggage tag optimized for BambuLab P1S.

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reversible Luggage Tag - Modular Layout Designer</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+
+  <!-- CSS Modules -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/controls.css">
+
+  <!-- QR Code Library - Local build -->
+  <script src="assets/js/qrcode.js"></script>
+
+  <!-- JavaScript Modules -->
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div id="app">
+      <!-- App content will be dynamically generated here -->
+      <div style="text-align: center; padding: 40px;">
+        <h1>Loading Luggage Tag Designer...</h1>
+        <div style="margin-top: 20px;">
+          <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0e7afe; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading animation CSS -->
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luggage Tag App - Test Runner</title>
+
+    <!-- CSS Modules -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/controls.css">
+
+    <!-- QR Code Library - Local build -->
+    <script src="assets/js/qrcode.js"></script>
+
+    <!-- JavaScript Modules -->
+    <script type="module" src="js/main.js"></script>
+
+    <!-- Test Script -->
+    <script src="test-functionality.js"></script>
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            background: #f5f5f5;
+        }
+
+        .test-header {
+            background: #fff;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .test-results {
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .test-console {
+            background: #1e1e1e;
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        .test-console .pass { color: #4ade80; }
+        .test-console .fail { color: #f87171; }
+        .test-console .warn { color: #fbbf24; }
+
+        .app-container {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            min-height: 600px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-indicator.testing {
+            background: #fbbf24;
+            color: #92400e;
+        }
+
+        .status-indicator.pass {
+            background: #4ade80;
+            color: #166534;
+        }
+
+        .status-indicator.fail {
+            background: #f87171;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🧪 Luggage Tag Application - Test Runner</h1>
+        <p>This page tests all functionality including QR generation, font loading, layout engine, and component integration.</p>
+        <div id="test-status">
+            <span>Status: </span>
+            <span class="status-indicator testing" id="status-badge">Testing...</span>
+        </div>
+    </div>
+
+    <div class="test-results">
+        <div class="test-console">
+            <h3>📜 Test Console Output</h3>
+            <div id="console-output">
+                <div>Starting test runner...</div>
+            </div>
+        </div>
+
+        <div class="app-container">
+            <h3>🏷️ Application Preview</h3>
+            <div id="app">
+                <!-- App will be initialized here -->
+                <div style="text-align: center; padding: 40px;">
+                    <h2>Loading Luggage Tag Designer...</h2>
+                    <div style="margin-top: 20px;">
+                        <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #0e7afe; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading animation CSS -->
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script>
+        // Override console.log to capture test output
+        const originalLog = console.log;
+        const consoleOutput = document.getElementById('console-output');
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+
+            const message = args.join(' ');
+            const div = document.createElement('div');
+            div.textContent = message;
+
+            // Color code based on test status
+            if (message.includes('[PASS]')) {
+                div.className = 'pass';
+            } else if (message.includes('[FAIL]')) {
+                div.className = 'fail';
+            } else if (message.includes('[WARN]')) {
+                div.className = 'warn';
+            }
+
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        // Update status when tests complete
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                // Check for test completion periodically
+                const checkTests = setInterval(() => {
+                    if (window.testRunner && window.testRunner.testResults) {
+                        const results = window.testRunner.testResults;
+                        const failed = results.filter(r => r.status === 'FAIL').length;
+
+                        if (results.length > 0) {
+                            const statusBadge = document.getElementById('status-badge');
+                            if (failed === 0) {
+                                statusBadge.textContent = 'All Tests Passed ✅';
+                                statusBadge.className = 'status-indicator pass';
+                            } else {
+                                statusBadge.textContent = `${failed} Tests Failed ❌`;
+                                statusBadge.className = 'status-indicator fail';
+                            }
+                            clearInterval(checkTests);
+                        }
+                    }
+                }, 1000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

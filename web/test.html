@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR and Font Test</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <script src="assets/js/qrcode.js"></script>
+    <style>
+        .test-container {
+            padding: 20px;
+            font-family: 'SF Pro Rounded', system-ui, sans-serif;
+        }
+        .test-font {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        #qrCanvas {
+            border: 2px solid #000;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>QR Generator & SF Pro Font Test</h1>
+
+        <div class="test-font">
+            This text should be in SF Pro Rounded Bold font
+        </div>
+
+        <button id="testQR">Test QR Generation</button>
+        <div id="status"></div>
+        <canvas id="qrCanvas" width="200" height="200"></canvas>
+
+        <script>
+            // Font test
+            document.fonts.ready.then(() => {
+                const testElement = document.querySelector('.test-font');
+                const computedStyle = window.getComputedStyle(testElement);
+                const fontFamily = computedStyle.fontFamily;
+
+                const statusDiv = document.getElementById('status');
+                if (fontFamily.includes('SF Pro Rounded')) {
+                    statusDiv.innerHTML += '<div class="status success">✓ SF Pro Rounded font loaded successfully</div>';
+                } else {
+                    statusDiv.innerHTML += '<div class="status error">✗ SF Pro Rounded font not loaded. Using: ' + fontFamily + '</div>';
+                }
+            });
+
+            // QR test
+            document.getElementById('testQR').addEventListener('click', async () => {
+                const statusDiv = document.getElementById('status');
+                const canvas = document.getElementById('qrCanvas');
+
+                try {
+                    if (typeof QRCode === 'undefined') {
+                        throw new Error('QRCode library not loaded');
+                    }
+
+                    await QRCode.toCanvas(canvas, 'https://example.com/test', {
+                        errorCorrectionLevel: 'L',
+                        margin: 4,
+                        width: 200
+                    });
+
+                    statusDiv.innerHTML += '<div class="status success">✓ QR Code generated successfully</div>';
+
+                } catch (error) {
+                    statusDiv.innerHTML += '<div class="status error">✗ QR Generation failed: ' + error.message + '</div>';
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

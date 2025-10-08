@@ -1,0 +1,70 @@
+/**
+ * CSS Custom Properties - Design System Variables
+ * All design tokens and configurable values for the luggage tag layout
+ */
+
+/* Font loading */
+@font-face {
+  font-family: 'SF Pro Rounded';
+  src: url('../assets/fonts/SF-Pro-Rounded-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-display: swap;
+}
+
+:root {
+  /* Tag Dimensions */
+  --tag-w: 200.0mm;   /* canvas width */
+  --tag-h: 74.0mm;    /* canvas height */
+  --radius: 4mm;      /* corner radius */
+  --thickness: 3mm;   /* for reference only */
+
+  /* Outer margins per side */
+  --outer-t: 4mm;
+  --outer-r: 4mm;
+  --outer-b: 4mm;
+  --outer-l: 4mm;
+
+  /* Inner padding per column (QR left, Text right) */
+  --qr-pad-t: 3mm;
+  --qr-pad-r: 3mm;
+  --qr-pad-b: 3mm;
+  --qr-pad-l: 3mm;
+  --tx-pad-t: 3mm;
+  --tx-pad-r: 3mm;
+  --tx-pad-b: 3mm;
+  --tx-pad-l: 3mm;
+
+  /* Layout spacing */
+  --gutter: 3mm;      /* column gutter */
+
+  /* QR Code settings */
+  --qr-module: 2mm;   /* QR module (inner square) size */
+  --qr-modules: 29;   /* number of modules per side for URL */
+  --qr-quiet: 4;      /* quiet-zone modules */
+  --qr-total: var(--qr-inner);
+
+  /* Slit settings (replaces old hole) */
+  --slit-width: 5.0mm;
+  --slit-height: 20.0mm;
+  --slit-margin-l: 4.0mm;
+  --slit-margin-r: 5.0mm;
+
+  /* Typography scale */
+  --fs-header: 10.0mm;
+  --fs-name: 6.0mm;
+  --fs-phone: 5.0mm;
+  --fs-email: 5.0mm;
+  --fs-footer: 7.0mm;
+
+  /* Color palette */
+  --bg: #fff;
+  --fg: #111;
+  --accent: #0e7afe;
+  --border: #e6e6e6;
+  --surface: #fafafa;
+
+  /* Debug colors */
+  --debug-qr: rgba(255, 0, 0, 0.3);
+  --debug-text: rgba(0, 255, 0, 0.3);
+  --debug-outline: rgba(0, 0, 255, 0.5);
+}

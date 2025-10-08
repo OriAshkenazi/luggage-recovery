@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Library Test</title>
+    <script src="assets/js/qrcode.js"></script>
+</head>
+<body>
+    <h1>QR Code Library Test</h1>
+    <canvas id="canvas"></canvas>
+    <div id="result"></div>
+
+    <script>
+        console.log('Testing QRCode library...');
+
+        // Check if QRCode is available
+        if (typeof QRCode !== 'undefined') {
+            console.log('✅ QRCode library is available');
+            document.getElementById('result').innerHTML = '<p style="color: green;">✅ QRCode library loaded successfully!</p>';
+
+            // Try to generate a QR code
+            const canvas = document.getElementById('canvas');
+            QRCode.toCanvas(canvas, 'https://example.com/test', function (error) {
+                if (error) {
+                    console.error('❌ QR generation failed:', error);
+                    document.getElementById('result').innerHTML += '<p style="color: red;">❌ QR generation failed: ' + error.message + '</p>';
+                } else {
+                    console.log('✅ QR code generated successfully');
+                    document.getElementById('result').innerHTML += '<p style="color: green;">✅ QR code generated successfully!</p>';
+                }
+            });
+        } else {
+            console.error('❌ QRCode library not found');
+            document.getElementById('result').innerHTML = '<p style="color: red;">❌ QRCode library not found</p>';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "luggage-tag-web-app",
+  "version": "1.0.0",
+  "description": "Reversible Luggage Tag Designer - Web Application",
+  "main": "js/main.js",
+  "scripts": {
+    "dev": "python -m http.server 8002",
+    "build": "npm run copy-assets && npm run validate",
+    "copy-assets": "browserify qrcode-entry.js -o assets/js/qrcode.js",
+    "validate": "echo 'Validating application...' && node validate-build.js",
+    "test": "python -m http.server 8002 > /dev/null 2>&1 & sleep 2 && node test-headless.js; kill $!",
+    "extract": "node extract_layout.js"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "author": "Luggage Recovery System",
+  "license": "MIT",
+  "keywords": [
+    "luggage",
+    "tag",
+    "qr-code",
+    "travel",
+    "recovery"
+  ],
+  "type": "module"
+}

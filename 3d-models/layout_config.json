@@ -1,0 +1,82 @@
+{
+  "input": {
+    "modules": 37,
+    "moduleSize": 2,
+    "quiet": 0,
+    "tagW": 240,
+    "tagH": 94,
+    "outerT": 4,
+    "outerR": 4,
+    "outerB": 4,
+    "outerL": 4,
+    "gutter": 3,
+    "slitWidth": 4.5,
+    "slitHeight": 20,
+    "slitMarginL": 3,
+    "slitMarginR": 9,
+    "fsH": 12,
+    "fsN": 8,
+    "fsP": 6,
+    "fsE": 6,
+    "fsF": 8,
+    "qrPadT": 3,
+    "qrPadR": 3,
+    "qrPadB": 3,
+    "qrPadL": 3,
+    "txPadT": 8,
+    "txPadR": 3,
+    "txPadB": 8,
+    "txPadL": 3
+  },
+  "computed": {
+    "qrInner": 74,
+    "leftColMm": 80,
+    "rightColMm": 149,
+    "contentW": 232,
+    "contentH": 86,
+    "qrSize": 74,
+    "actualModuleSize": 2,
+    "qrCenter": {
+      "x": -76,
+      "y": 0
+    },
+    "slitCenter": {
+      "x": 108.75,
+      "y": 0
+    },
+    "textCol": {
+      "left": -33,
+      "right": 116,
+      "top": 43,
+      "bottom": -43
+    },
+    "textArea": {
+      "left": -30,
+      "right": 113,
+      "top": 35,
+      "bottom": -35,
+      "width": 143,
+      "height": 70
+    }
+  },
+  "stacking": {
+    "topSide": {
+      "mirrored": false,
+      "description": "non-mirrored - reads normally when viewed from above"
+    },
+    "bottomSide": {
+      "mirrored": true,
+      "mirrorPlane": "YZ",
+      "description": "mirrored across YZ - reads correctly after 180° Y-rotation"
+    },
+    "webThickness": 0.4,
+    "totalThickness": 3,
+    "halfDepth": 1.3,
+    "stackOrder": "front_stack_mirrored + central_web + back_stack_normal"
+  },
+  "meta": {
+    "generatedAt": "2025-09-15T15:09:27.864Z",
+    "source": "web_layout_engine",
+    "version": "1.0.0"
+  }
+}

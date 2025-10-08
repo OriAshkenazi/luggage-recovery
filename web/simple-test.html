@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+    <script src="assets/js/qrcode.js"></script>
+</head>
+<body>
+    <h1>Simple Test Page</h1>
+    <div id="app">App will load here...</div>
+
+    <script>
+        console.log('Script starting...');
+
+        // Test 1: Check QRCode library
+        if (typeof QRCode !== 'undefined') {
+            console.log('✅ QRCode library loaded');
+            document.getElementById('app').innerHTML += '<p>✅ QRCode library loaded</p>';
+        } else {
+            console.log('❌ QRCode library NOT loaded');
+            document.getElementById('app').innerHTML += '<p>❌ QRCode library NOT loaded</p>';
+        }
+
+        // Test 2: Create simple header
+        try {
+            const header = document.createElement('h2');
+            header.textContent = 'Test Header Created by JavaScript';
+            document.getElementById('app').appendChild(header);
+            console.log('✅ Header created successfully');
+        } catch (error) {
+            console.log('❌ Error creating header:', error.message);
+            document.getElementById('app').innerHTML += '<p>❌ Error: ' + error.message + '</p>';
+        }
+
+        console.log('Script completed');
+    </script>
+</body>
+</html>

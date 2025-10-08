@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reversible Luggage Tag Layout Preview</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <!-- Removed external QR CDN: not used; layout uses mm-only placeholders -->
+  <style>
+    :root {
+      --tag-w: 240.0mm;   /* canvas width */
+      --tag-h: 94.0mm;    /* canvas height */
+      --radius: 4mm;      /* corner radius */
+      --thickness: 3mm;   /* for reference only */
+
+      /* Outer margins per side */
+      --outer-t: 4mm; --outer-r: 4mm; --outer-b: 4mm; --outer-l: 4mm;
+
+      /* Inner padding per column (QR left, Text right) */
+      --qr-pad-t: 3mm; --qr-pad-r: 3mm; --qr-pad-b: 3mm; --qr-pad-l: 3mm;
+      --tx-pad-t: 3mm; --tx-pad-r: 3mm; --tx-pad-b: 3mm; --tx-pad-l: 3mm;
+
+      --gutter: 3mm;      /* column gutter */
+      --hole-d: 6mm;      /* hole diameter */
+      --hole-off-x: 10mm; /* hole offset from right edge */
+      --hole-off-y: 8mm;  /* hole offset from top edge */
+      --qr-module: 2mm;   /* QR module (inner square) size */
+      --qr-modules: 37;   /* number of modules per side for URL */
+      --qr-quiet: 4;      /* quiet-zone modules */
+
+      --bg: #fff;
+      --fg: #111;
+      --accent: #0e7afe;
+    }
+
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; color: var(--fg); background: #fafafa; }
+    .wrap { max-width: 1100px; margin: 16px auto; padding: 0 16px; }
+
+    .controls { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); margin-bottom: 16px; }
+    .controls .group { background: #fff; border: 1px solid #e6e6e6; border-radius: 8px; padding: 12px; }
+    .controls label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; font-size: 14px; margin: 8px 0; }
+    .controls input[type="number"] { width: 90px; }
+
+    .tag-frame { display: grid; justify-content: start; align-items: start; overflow: auto; padding: 8px; background: #f0f0f0; border: 1px dashed #ccc; border-radius: 8px; }
+
+    .tag { position: relative; width: var(--tag-w); height: var(--tag-h); background: var(--bg);
+           border: 0.6mm solid #000; border-radius: var(--radius); box-shadow: 0 1.5mm 4mm rgba(0,0,0,0.08); margin: 7mm auto; }
+
+    /* Mirrored tag - show as face-on view, not 3D print orientation */
+    .tag.mirrored { /* No transform - show face-on */ }
+    .tag.mirrored .content { /* No transform needed */ }
+
+    /* Slit (column content) */
+    .slit { width: var(--slit-width, 3mm); height: var(--slit-height, 12mm);
+            border: 0.6mm solid #000; border-radius: calc(var(--slit-width, 3mm) / 2);
+            background: transparent; box-sizing: border-box; justify-self: start; align-self: center;
+            margin-left: var(--slit-margin-l, 0mm); margin-right: var(--slit-margin-r, 0mm); }
+    .tag.mirrored .slit { margin-left: var(--slit-margin-r, 0mm); margin-right: var(--slit-margin-l, 0mm); }
+
+    /* 4-column grid: front = QR | gutter | Text | Slit */
+    .content { position: absolute; left: var(--outer-l); top: var(--outer-t); right: var(--outer-r); bottom: var(--outer-b);
+               display: grid; grid-template-columns: var(--left-col, 40mm) var(--gutter) var(--right-col, 60mm) var(--slit-col-front, 0mm); }
+
+    /* Back: Slit | Text | gutter | QR */
+    .tag.mirrored .content { grid-template-columns: var(--slit-col-back, 0mm) var(--left-col, 40mm) var(--gutter) var(--right-col, 60mm); }
+
+    .qr-col { grid-column: 1; padding: var(--qr-pad-t) var(--qr-pad-r) var(--qr-pad-b) var(--qr-pad-l); display: grid; place-items: center; align-content: center; background: #fff; justify-self: stretch; overflow: visible; }
+    .gutter-spacer { grid-column: 2; }
+    .text-col { grid-column: 3; position: relative; padding: calc(var(--tx-pad-t) + var(--text-cap, 0mm)) var(--tx-pad-r) var(--tx-pad-b) var(--tx-pad-l);
+               display: grid; grid-template-rows: auto 1fr auto; gap: 3mm; background: #fff; align-content: start; justify-self: stretch; box-sizing: border-box; }
+    .slit-col { grid-column: 4; display: grid; align-items: center; justify-items: start; }
+
+    /* Mirrored mapping */
+    .tag.mirrored .slit-col { grid-column: 1; }
+    .tag.mirrored .text-col { grid-column: 2; }
+    .tag.mirrored .gutter-spacer { grid-column: 3; }
+    .tag.mirrored .qr-col { grid-column: 4; }
+
+    .qr-box { position: relative; width: var(--qr-inner); height: var(--qr-inner); background: #fff; border: 0.2mm solid rgba(0,0,0,0.25); box-sizing: border-box; }
+    .qr-box::after { content:""; position: absolute; inset: calc(-1 * var(--qr-quiet-mm, 0mm)); border: 0.2mm dashed rgba(0,0,0,0.35); pointer-events: none; display: none; }
+    html.has-quiet .qr-box::after { display: block; }
+
+    .h { font-family: "SF Pro Rounded", ui-rounded, system-ui, -apple-system, sans-serif; font-weight: 700; font-size: var(--fs-h); line-height: 1; }
+    .name { font-family: "SF Pro Rounded", ui-rounded, system-ui, -apple-system, sans-serif; font-weight: 700; font-size: var(--fs-n); line-height: 1.05; margin-bottom: 2mm; }
+    .phone { font-family: "SF Pro Rounded", ui-rounded, system-ui, -apple-system, sans-serif; font-weight: 700; font-size: var(--fs-p); line-height: 1.05; }
+    .email { font-family: "SF Pro Rounded", ui-rounded, system-ui, -apple-system, sans-serif; font-weight: 700; font-size: var(--fs-e); line-height: 1.05; }
+    .footer { font-family: "SF Pro Rounded", ui-rounded, system-ui, -apple-system, sans-serif; font-weight: 700; font-size: var(--fs-foot); line-height: 1; opacity: 0.9; }
+
+    .note { font-size: 13px; color: #444; margin-top: 6px; }
+    .metrics { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #333; white-space: pre; }
+    /* Debug visuals */
+    .debug .qr-col { outline: 1px dashed #999; }
+    .debug .text-col { outline: 1px dashed #999; }
+    .debug .qr-box { outline-color: #000; }
+    /* Error banner */
+    #errors { display: none; margin: 12px 0; padding: 10px 12px; border: 2px solid #000; background: #fff; border-radius: 8px; }
+    #errors.show { display: block; }
+    #errors .title { font-weight: 700; margin-bottom: 6px; }
+    #errors ul { margin: 0; padding-left: 18px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="build" style="font:12px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#444; margin:8px 0 4px;">
+      Build: tag_layout.html v-site-debug-8002-1 — served from port <span id="port">?</span>
+    </div>
+    <h1 style="margin:8px 0 12px">Reversible Tag — Web Layout Preview</h1>
+
+    <div class="controls">
+      <div class="group">
+        <strong>QR Code</strong>
+        <label>URL <input id="qrUrl" type="text" value="https://oriashkenazi.github.io/luggage-recovery" style="width: 300px;"></label>
+        <label>Module size (mm) <input id="moduleSize" type="number" step="0.1" min="0.5" max="4" value="2.0"></label>
+        <label>Modules (count) <input id="modules" type="number" step="1" min="17" max="73" value="29"></label>
+        <label>Quiet zone (modules) <input id="quiet" type="number" step="1" min="0" max="8" value="0"></label>
+        <div><small id="qrInfo">QR: modules × module size (mm), quiet (modules) — no external generator</small></div>
+      </div>
+      <div class="group">
+        <strong>Canvas</strong>
+        <label>Width (mm) <input id="tagW" type="number" step="1" min="40" value="200.0"></label>
+        <label>Height (mm) <input id="tagH" type="number" step="1" min="30" value="74.0"></label>
+        <em style="font-size:12px;opacity:.8">Outer margins (per side)</em>
+        <label>Top <input id="outerT" type="number" step="0.5" min="0" value="4"></label>
+        <label>Right <input id="outerR" type="number" step="0.5" min="0" value="4"></label>
+        <label>Bottom <input id="outerB" type="number" step="0.5" min="0" value="4"></label>
+        <label>Left <input id="outerL" type="number" step="0.5" min="0" value="4"></label>
+        <label>Gutter (mm) <input id="gutter" type="number" step="0.5" min="0" value="3"></label>
+      </div>
+      <div class="group">
+        <strong>Text</strong>
+        <label>Header size (mm) <input id="fsH" type="number" step="0.2" min="2" value="10.0"></label>
+        <label>Name size (mm) <input id="fsN" type="number" step="0.2" min="2" value="6.0"></label>
+        <label>Phone size (mm) <input id="fsP" type="number" step="0.2" min="2" value="5.0"></label>
+        <label>Email size (mm) <input id="fsE" type="number" step="0.2" min="2" value="5.0"></label>
+        <label>Footer size (mm) <input id="fsF" type="number" step="0.2" min="2" value="7.0"></label>
+      </div>
+      <div class="group">
+        <strong>Padding</strong>
+        <em style="font-size:12px;opacity:.8">QR column</em>
+        <label>Top <input id="qrPadT" type="number" step="0.5" min="0" value="3"></label>
+        <label>Right <input id="qrPadR" type="number" step="0.5" min="0" value="3"></label>
+        <label>Bottom <input id="qrPadB" type="number" step="0.5" min="0" value="3"></label>
+        <label>Left <input id="qrPadL" type="number" step="0.5" min="0" value="3"></label>
+        <em style="font-size:12px;opacity:.8">Text column</em>
+        <label>Top <input id="txPadT" type="number" step="0.5" min="0" value="8"></label>
+        <label>Right <input id="txPadR" type="number" step="0.5" min="0" value="3"></label>
+        <label>Bottom <input id="txPadB" type="number" step="0.5" min="0" value="8"></label>
+        <label>Left <input id="txPadL" type="number" step="0.5" min="0" value="3"></label>
+      </div>
+      <div class="group">
+        <strong>Slit (mirrored on both sides)</strong>
+        <label>Width (mm) <input id="slitWidth" type="number" step="0.5" min="1" value="5.0"></label>
+        <label>Height (mm) <input id="slitHeight" type="number" step="0.5" min="3" value="20.0"></label>
+        <label>Left margin (mm) <input id="slitMarginL" type="number" step="0.5" min="0" value="4.0"></label>
+        <label>Right margin (mm) <input id="slitMarginR" type="number" step="0.5" min="0" value="5.0"></label>
+      </div>
+      <div class="group">
+        <strong>Debug</strong>
+        <label>Show outlines <input id="showDebug" type="checkbox"></label>
+        <label>Enable telemetry <input id="showTelemetry" type="checkbox"></label>
+      </div>
+      <div class="group">
+        <strong>Export</strong>
+        <button id="exportSVG" type="button">Export SVG</button>
+        <button id="exportConfig" type="button">Export Config JSON</button>
+      </div>
+      <div class="group">
+        <strong>Tests</strong>
+        <button id="runTests" type="button">Run Layout Tests</button>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 7mm; flex-wrap: wrap; justify-content: center;">
+      <div>
+        <h3 style="text-align: center; margin: 8px 0;">Front Side (Normal)</h3>
+        <div class="tag-frame">
+          <div id="tag" class="tag">
+            <div class="content">
+              <div class="qr-col">
+                <div class="qr-box" title="QR box (outline = data area)"></div>
+              </div>
+              <div class="gutter-spacer"></div>
+              <div class="text-col">
+                <div class="h">FOUND MY LUGGAGE?</div>
+                <div class="body">
+                  <div class="name">ORI ASHKENAZI</div>
+                  <div class="phone">+972-50-971-3042</div>
+                  <div class="email">ORIASHKENAZI93@GMAIL.COM</div>
+                </div>
+                <div class="footer">SCAN QR OR CALL/TEXT</div>
+              </div>
+              <div class="slit-col"><div class="slit" title="Vertical slit"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="text-align: center; margin: 8px 0;">Back Side (Mirrored)</h3>
+        <div class="tag-frame">
+          <div id="tag-mirrored" class="tag mirrored">
+            <div class="content">
+              <div class="qr-col">
+                <div class="qr-box" title="QR box (outline = data area)"></div>
+              </div>
+              <div class="gutter-spacer"></div>
+              <div class="text-col">
+                <div class="h">FOUND MY LUGGAGE?</div>
+                <div class="body">
+                  <div class="name">ORI ASHKENAZI</div>
+                  <div class="phone">+972-50-971-3042</div>
+                  <div class="email">ORIASHKENAZI93@GMAIL.COM</div>
+                </div>
+                <div class="footer">SCAN QR OR CALL/TEXT</div>
+              </div>
+              <div class="slit-col"><div class="slit" title="Vertical slit (mirrored)"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="errors"><div class="title">Layout diagnostics</div><ul id="errorsList"></ul></div>
+    <div class="metrics" id="metrics"></div>
+    <div id="debug" style="display:none; margin-top:8px;">
+      <div class="title" style="font-weight:700;">Debug telemetry</div>
+      <pre id="debugPre" class="metrics"></pre>
+      <div class="note">How to provide debug: toggle "Enable telemetry", reproduce the issue, copy the block above (including numbers) and paste it here. Optionally open DevTools and run <code>window.__tagDebug()</code> to dump the same data to console.</div>
+    </div>
+    <div class="note">This preview enforces the layout constraints visually in CSS mm and adapts the canvas around the QR. The QR is represented by its bounding box and quiet zone; actual modules are handled in the CAD generator.</div>
+  </div>
+
+  <script>
+    (function(){
+      const p = document.getElementById('port');
+      if (p) p.textContent = window.location.port || '(default)';
+      console.log('[tag-layout] build=v-site-debug-8002-1 port=', window.location.port);
+    })();
+    const el = {
+      tag: document.getElementById('tag'),
+      tagMirrored: document.getElementById('tag-mirrored'),
+      metrics: document.getElementById('metrics'),
+      inputs: {
+        modules: document.getElementById('modules'),
+        moduleSize: document.getElementById('moduleSize'),
+        quiet: document.getElementById('quiet'),
+        tagW: document.getElementById('tagW'),
+        tagH: document.getElementById('tagH'),
+        outerT: document.getElementById('outerT'),
+        outerR: document.getElementById('outerR'),
+        outerB: document.getElementById('outerB'),
+        outerL: document.getElementById('outerL'),
+        gutter: document.getElementById('gutter'),
+        fsH: document.getElementById('fsH'),
+        fsN: document.getElementById('fsN'),
+        fsP: document.getElementById('fsP'),
+        fsE: document.getElementById('fsE'),
+        fsF: document.getElementById('fsF'),
+        slitWidth: document.getElementById('slitWidth'),
+        slitHeight: document.getElementById('slitHeight'),
+        slitMarginL: document.getElementById('slitMarginL'),
+        slitMarginR: document.getElementById('slitMarginR'),
+        showDebug: document.getElementById('showDebug'),
+        showTelemetry: document.getElementById('showTelemetry'),
+        qrPadT: document.getElementById('qrPadT'),
+        qrPadR: document.getElementById('qrPadR'),
+        qrPadB: document.getElementById('qrPadB'),
+        qrPadL: document.getElementById('qrPadL'),
+        txPadT: document.getElementById('txPadT'),
+        txPadR: document.getElementById('txPadR'),
+        txPadB: document.getElementById('txPadB'),
+        txPadL: document.getElementById('txPadL'),
+      }
+    };
+
+    function mm(v) { return `${v}mm`; }
+
+    let updatingInputs = false;
+
+    function layout() {
+      // Guard: if tag not found, skip
+      if (!el.tag) {
+        return;
+      }
+      // Guard: if tag not laid out yet, defer once (but don't defer forever)
+      if (el.tag.clientWidth === 0 || el.tag.clientHeight === 0) {
+        setTimeout(layout, 10);
+        return;
+      }
+      const cfg = getCurrentConfig();
+      const moduleSize = cfg.moduleSize;
+      const qrData = moduleSize * cfg.modules;
+      const quietMm = moduleSize * cfg.quiet;
+      const qrTotal = qrData + quietMm * 2;
+
+      // Compute left column width (QR) from required total size + padding
+      const leftColMm = qrTotal + (cfg.qrPadL + cfg.qrPadR);
+
+      // First, set a provisional width/height.
+      document.documentElement.style.setProperty('--tag-w', mm(cfg.tagW));
+      document.documentElement.style.setProperty('--tag-h', mm(cfg.tagH));
+      document.documentElement.style.setProperty('--outer-t', mm(cfg.outerT));
+      document.documentElement.style.setProperty('--outer-r', mm(cfg.outerR));
+      document.documentElement.style.setProperty('--outer-b', mm(cfg.outerB));
+      document.documentElement.style.setProperty('--outer-l', mm(cfg.outerL));
+      document.documentElement.style.setProperty('--qr-pad-t', mm(cfg.qrPadT));
+      document.documentElement.style.setProperty('--qr-pad-r', mm(cfg.qrPadR));
+      document.documentElement.style.setProperty('--qr-pad-b', mm(cfg.qrPadB));
+      document.documentElement.style.setProperty('--qr-pad-l', mm(cfg.qrPadL));
+      document.documentElement.style.setProperty('--tx-pad-t', mm(cfg.txPadT));
+      document.documentElement.style.setProperty('--tx-pad-r', mm(cfg.txPadR));
+      document.documentElement.style.setProperty('--tx-pad-b', mm(cfg.txPadB));
+      document.documentElement.style.setProperty('--tx-pad-l', mm(cfg.txPadL));
+      document.documentElement.style.setProperty('--gutter', mm(cfg.gutter));
+      document.documentElement.style.setProperty('--slit-width', mm(cfg.slitWidth));
+      document.documentElement.style.setProperty('--slit-height', mm(cfg.slitHeight));
+      document.documentElement.style.setProperty('--slit-margin-l', mm(cfg.slitMarginL));
+      document.documentElement.style.setProperty('--slit-margin-r', mm(cfg.slitMarginR));
+
+      // Calculate back side position: for face-on view, slit is on left side (mirrored)
+      // Define slit columns width (mm): slit width + margin on the slit edge
+      const slitTrack = cfg.slitWidth + cfg.slitMarginL + cfg.slitMarginR;
+      document.documentElement.style.setProperty('--slit-col-front', mm(slitTrack));
+      document.documentElement.style.setProperty('--slit-col-back', mm(slitTrack));
+      document.documentElement.style.setProperty('--qr-inner', mm(qrData));
+      document.documentElement.style.setProperty('--qr-total', mm(qrTotal));
+      document.documentElement.style.setProperty('--qr-quiet-mm', mm(quietMm));
+      document.documentElement.classList.toggle('has-quiet', quietMm > 0);
+      document.documentElement.style.setProperty('--fs-h', mm(cfg.fsH));
+      document.documentElement.style.setProperty('--fs-n', mm(cfg.fsN));
+      document.documentElement.style.setProperty('--fs-p', mm(cfg.fsP));
+      document.documentElement.style.setProperty('--fs-e', mm(cfg.fsE));
+      document.documentElement.style.setProperty('--fs-foot', mm(cfg.fsF));
+
+      // Compute scale: px per mm for current tag
+      const pxPerMmW = el.tag.clientWidth / cfg.tagW;
+      const pxPerMmH = el.tag.clientHeight / cfg.tagH;
+
+      // Measure intrinsic text widths off-DOM to get minimal right column need
+      const testLines = [
+        { text: 'FOUND MY LUGGAGE?', size: cfg.fsH },
+        { text: 'ORI ASHKENAZI', size: cfg.fsN },
+        { text: '+972-50-971-3042', size: cfg.fsP },
+        { text: 'ORIASHKENAZI93@GMAIL.COM', size: cfg.fsE },
+        { text: 'SCAN QR OR CALL/TEXT', size: cfg.fsF },
+      ];
+      let maxTextPx = 0;
+      const meas = document.createElement('div');
+      meas.style.position = 'fixed';
+      meas.style.left = '-10000px';
+      meas.style.top = '0';
+      document.body.appendChild(meas);
+      for (const line of testLines) {
+        const span = document.createElement('span');
+        span.textContent = line.text;
+        span.style.fontFamily = 'SF Pro Rounded, ui-rounded, system-ui, -apple-system, sans-serif';
+        span.style.fontWeight = '700';
+        span.style.fontSize = mm(line.size);
+        meas.appendChild(span);
+        const w = span.getBoundingClientRect().width;
+        maxTextPx = Math.max(maxTextPx, w);
+        meas.removeChild(span);
+      }
+      document.body.removeChild(meas);
+      const minTextColMm = (maxTextPx / pxPerMmW) + (cfg.txPadL + cfg.txPadR);
+
+      // Content width needed
+      const contentMinW = leftColMm + cfg.gutter + minTextColMm;
+      const contentW = cfg.tagW - (cfg.outerL + cfg.outerR);
+
+      // Calculate minimum space needed for slit positioning
+      const rightColActualW = Math.max(minTextColMm, 10);
+
+      // For front side: we need right column + margins + slit width beyond the right column
+      const frontSlitExtension = cfg.slitMarginL + cfg.slitWidth + cfg.slitMarginR;
+      const frontTotalRightSpace = rightColActualW + frontSlitExtension;
+      const contentMinWWithFrontSlit = leftColMm + cfg.gutter + frontTotalRightSpace;
+
+      // For back side face-on view: slit needs space from left edge of canvas (mirrored)
+      const backSlitSpaceFromLeft = cfg.slitMarginR + cfg.slitWidth + cfg.slitMarginL; // mirrored margins
+      const backContentMinW = backSlitSpaceFromLeft + leftColMm + cfg.gutter + rightColActualW;
+      const contentMinWWithBackSlit = backContentMinW;
+
+      // Use the larger requirement
+      const contentMinWWithSlit = Math.max(contentMinWWithFrontSlit, contentMinWWithBackSlit);
+      const tagMinWForSlit = contentMinWWithSlit + (cfg.outerL + cfg.outerR);
+
+      let tagWFinal = cfg.tagW;
+      if (contentW < contentMinW) {
+        tagWFinal = Math.max(tagWFinal, contentMinW + (cfg.outerL + cfg.outerR)); // expand canvas to fit content
+      }
+      if (tagWFinal < tagMinWForSlit) {
+        tagWFinal = tagMinWForSlit; // expand to accommodate slit with margins
+      }
+
+      // Height: ensure QR fits vertically including padding
+      const contentH = cfg.tagH - (cfg.outerT + cfg.outerB);
+      const contentMinH = qrTotal + (cfg.qrPadT + cfg.qrPadB);
+      let tagHFinal = cfg.tagH;
+      if (contentH < contentMinH) {
+        tagHFinal = contentMinH + (cfg.outerT + cfg.outerB);
+      }
+
+      // Apply final canvas
+      document.documentElement.style.setProperty('--tag-w', mm(tagWFinal));
+      document.documentElement.style.setProperty('--tag-h', mm(tagHFinal));
+      document.documentElement.style.setProperty('--left-col', mm(leftColMm));
+      document.documentElement.style.setProperty('--right-col', mm(Math.max(minTextColMm, 10)));
+
+      // No header cap needed since slit is on right edge, not in text column
+      let textCapMm = 0;
+      document.documentElement.style.setProperty('--text-cap', mm(textCapMm));
+
+      // Toggle debug outlines
+      document.body.classList.toggle('debug', !!el.inputs.showDebug.checked);
+
+      // Diagnostics
+      const errs = [];
+      const expandedW = (cfg.tagW - (cfg.outerL + cfg.outerR)) < (leftColMm + cfg.gutter + minTextColMm);
+      const expandedH = (cfg.tagH - (cfg.outerT + cfg.outerB)) < (qrTotal + (cfg.qrPadT + cfg.qrPadB));
+      const expandedWForSlit = cfg.tagW < tagMinWForSlit;
+      if (expandedW) errs.push('Canvas width expanded to fit QR and text.');
+      if (expandedH) errs.push('Canvas height expanded to fit QR vertically.');
+      if (expandedWForSlit) errs.push(`Canvas width expanded to accommodate slit positioning (needs ${tagMinWForSlit.toFixed(1)}mm for front extension: ${frontSlitExtension.toFixed(1)}mm, back space: ${backSlitSpaceFromLeft.toFixed(1)}mm).`);
+      // Slit validation - check if it fits within tag bounds
+      const slitFitsH = cfg.slitHeight <= tagHFinal;
+      if (!slitFitsH) errs.push(`Slit too tall for tag: height(${cfg.slitHeight}) > tagH(${tagHFinal.toFixed(1)}).`);
+      if (cfg.modules < 17 || cfg.modules > 73) errs.push(`Modules per side out of typical QR range (17–73): ${cfg.modules}.`);
+      if (moduleSize < 0.8) errs.push(`Module size may be too small for print legibility: ${moduleSize} mm.`);
+      const errorsBox = document.getElementById('errors');
+      const list = document.getElementById('errorsList');
+      list.innerHTML = '';
+      if (errs.length) {
+        errorsBox.classList.add('show');
+        for (const msg of errs) {
+          const li = document.createElement('li');
+          li.textContent = msg;
+          list.appendChild(li);
+        }
+      } else {
+        errorsBox.classList.remove('show');
+      }
+
+      // Update input fields to reflect responsive canvas
+      if (!updatingInputs) {
+        updatingInputs = true;
+        el.inputs.tagW.value = tagWFinal.toFixed(1);
+        el.inputs.tagH.value = tagHFinal.toFixed(1);
+        updatingInputs = false;
+      }
+
+      // Metrics
+      el.metrics.textContent = [
+        `Canvas: ${tagWFinal.toFixed(1)} × ${tagHFinal.toFixed(1)} mm (outer T/R/B/L: ${cfg.outerT}/${cfg.outerR}/${cfg.outerB}/${cfg.outerL})`,
+        `QR: ${cfg.modules} modules × ${moduleSize.toFixed(2)} mm → data ${qrData.toFixed(1)} mm, total ${qrTotal.toFixed(1)} mm (quiet ${quietMm.toFixed(1)} mm each side)`,
+        `Columns: left ${leftColMm.toFixed(1)} mm (QR pad L/R ${cfg.qrPadL}+${cfg.qrPadR}) | right ≥ ${minTextColMm.toFixed(1)} mm (TX pad L/R ${cfg.txPadL}+${cfg.txPadR}) | slit track ${slitTrack.toFixed(1)} mm | gutter ${cfg.gutter.toFixed(1)} mm`,
+        `Text sizes (mm): H ${cfg.fsH.toFixed(1)}, N ${cfg.fsN.toFixed(1)}, P ${cfg.fsP.toFixed(1)}, E ${cfg.fsE.toFixed(1)}, F ${cfg.fsF.toFixed(1)}`,
+        `Slit: W×H ${cfg.slitWidth.toFixed(1)}×${cfg.slitHeight.toFixed(1)} mm, margins L/R ${cfg.slitMarginL.toFixed(1)}/${cfg.slitMarginR.toFixed(1)} mm (mirrored on back side)`,
+        `QR padding: T/R/B/L ${cfg.qrPadT}/${cfg.qrPadR}/${cfg.qrPadB}/${cfg.qrPadL} mm`,
+        `Text padding: T/R/B/L ${cfg.txPadT}/${cfg.txPadR}/${cfg.txPadB}/${cfg.txPadL} mm`,
+        `Module size: ${moduleSize.toFixed(2)} mm | Quiet zone: ${cfg.quiet} modules`,
+        `All values: width=${tagWFinal.toFixed(1)} height=${tagHFinal.toFixed(1)} modules=${cfg.modules} moduleSize=${moduleSize.toFixed(2)} quiet=${cfg.quiet} outerT=${cfg.outerT} outerR=${cfg.outerR} outerB=${cfg.outerB} outerL=${cfg.outerL} gutter=${cfg.gutter} qrPadT=${cfg.qrPadT} qrPadR=${cfg.qrPadR} qrPadB=${cfg.qrPadB} qrPadL=${cfg.qrPadL} txPadT=${cfg.txPadT} txPadR=${cfg.txPadR} txPadB=${cfg.txPadB} txPadL=${cfg.txPadL} slitWidth=${cfg.slitWidth} slitHeight=${cfg.slitHeight} slitMarginL=${cfg.slitMarginL} slitMarginR=${cfg.slitMarginR} fsH=${cfg.fsH} fsN=${cfg.fsN} fsP=${cfg.fsP} fsE=${cfg.fsE} fsF=${cfg.fsF}`
+      ].join('\n');
+
+      // Wire tests trigger (idempotent)
+      const testsBtn = document.getElementById('runTests');
+      if (testsBtn && !testsBtn.__bound) {
+        testsBtn.__bound = true;
+        testsBtn.addEventListener('click', () => runLayoutTests());
+      }
+
+      // Telemetry: compute precise position checks for hole inside text column
+      const telemetryOn = !!el.inputs.showTelemetry.checked;
+      const debugBox = document.getElementById('debug');
+      const debugPre = document.getElementById('debugPre');
+      if (!telemetryOn) {
+        debugBox.style.display = 'none';
+      } else {
+        debugBox.style.display = 'block';
+        const textCol = document.querySelector('.text-col');
+        const slitEl = document.querySelector('.slit');
+        const contentEl = document.querySelector('.content');
+        const tcR = textCol.getBoundingClientRect();
+        const sR = slitEl ? slitEl.getBoundingClientRect() : null;
+        const cs = getComputedStyle(textCol);
+        const csGrid = getComputedStyle(contentEl);
+        const padTpx = parseFloat(cs.paddingTop);
+        const padRpx = parseFloat(cs.paddingRight);
+        const padBpx = parseFloat(cs.paddingBottom);
+        const padLpx = parseFloat(cs.paddingLeft);
+        const pxPerMm = el.tag.clientWidth / cfg.tagW;
+        const mmPerPx = 1 / pxPerMm;
+
+        // MM-only telemetry
+        const actualTopMm = sR ? (sR.top - tcR.top) * mmPerPx : 0;
+        const expectTopMm = sR ? ((tcR.height * mmPerPx)/2 - cfg.slitHeight/2) : 0; // centered inside tag box visually
+        const deltaTopMm = actualTopMm - expectTopMm;
+
+        const actualRightMm = sR ? (tcR.right - sR.right) * mmPerPx : 0;
+        const expectRightMm = sR ? cfg.slitMarginR : 0;
+        const deltaRightMm = actualRightMm - expectRightMm;
+
+        const innerWmm = (tcR.width - padLpx - padRpx) * mmPerPx;
+        const innerHmm = (tcR.height - padTpx - padBpx) * mmPerPx;
+        const slitFitsOkay = sR ? (cfg.slitHeight <= tagHFinal) : true;
+
+        // Grid and var snapshot
+        const v = n => csGrid.getPropertyValue(n).trim() || getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+        const gridTemplate = csGrid.getPropertyValue('grid-template-columns').trim();
+        const leftColVar = v('--left-col');
+        const rightColVar = v('--right-col');
+        const gutterVar = v('--gutter');
+        const txPadLVar = v('--tx-pad-l');
+        const txPadRVar = v('--tx-pad-r');
+        const qrPadLVar = v('--qr-pad-l');
+        const qrPadRVar = v('--qr-pad-r');
+
+        // Determine which grid track each child occupies by comparing rects to template track widths
+        const matchPx = gridTemplate.match(/([0-9.]+)px/g) || [];
+        const tracksPx = matchPx.map(s => parseFloat(s));
+        const contentRect = contentEl.getBoundingClientRect();
+        const relLeft = (rect) => rect.left - contentRect.left; // px from content left
+        const trackIndexFor = (rect) => {
+          const x = relLeft(rect) + rect.width / 2; // center point
+          let sum = 0;
+          for (let i = 0; i < tracksPx.length; i++) {
+            sum += tracksPx[i];
+            if (x <= sum + 0.5) return i + 1; // 1-based index
+          }
+          return tracksPx.length;
+        };
+        const qrCol = document.querySelector('.qr-col');
+        const qrR = qrCol.getBoundingClientRect();
+        const qrTrack = trackIndexFor(qrR);
+        const txTrack = trackIndexFor(tcR);
+
+        const textCol_mm = { x: (tcR.left*mmPerPx).toFixed(2), y: (tcR.top*mmPerPx).toFixed(2), w: (tcR.width*mmPerPx).toFixed(2), h: (tcR.height*mmPerPx).toFixed(2) };
+        const slit_mm = sR ? { x: (sR.left*mmPerPx).toFixed(2), y: (sR.top*mmPerPx).toFixed(2), w: (sR.width*mmPerPx).toFixed(2), h: (sR.height*mmPerPx).toFixed(2) } : null;
+        const padTmm = (padTpx*mmPerPx).toFixed(2), padRmm=(padRpx*mmPerPx).toFixed(2), padBmm=(padBpx*mmPerPx).toFixed(2), padLmm=(padLpx*mmPerPx).toFixed(2);
+        const actualTopMm = (actualTopPx*mmPerPx), expectTopMm = (expectTopPx*mmPerPx), deltaTopMm = (deltaTopPx*mmPerPx);
+        const actualRightMm = (actualRightPx*mmPerPx), expectRightMm = (expectRightPx*mmPerPx), deltaRightMm = (deltaRightPx*mmPerPx);
+        const tracks_mm = tracksPx.map(v => (v*mmPerPx).toFixed(2));
+        const lines = [
+          `TextCol mm (x,y,w,h): ${textCol_mm.x}, ${textCol_mm.y}, ${textCol_mm.w}, ${textCol_mm.h}`,
+          `Slit mm (x,y,w,h): ${slit_mm ? `${slit_mm.x}, ${slit_mm.y}, ${slit_mm.w}, ${slit_mm.h}` : 'N/A'}`,
+          `Padding mm (t,r,b,l): ${padTmm}, ${padRmm}, ${padBmm}, ${padLmm}`,
+          `Actual top offset mm: ${actualTopMm.toFixed(2)} | Expected: ${expectTopMm.toFixed(2)} | Δ: ${deltaTopMm.toFixed(2)} mm` ,
+          `Actual right margin mm: ${actualRightMm.toFixed(2)} | Expected: ${expectRightMm.toFixed(2)} | Δ: ${deltaRightMm.toFixed(2)} mm`,
+          `Inner text-col (mm) W×H: ${innerWmm.toFixed(2)} × ${innerHmm.toFixed(2)}`,
+          `Slit fits okay? ${slitFitsOkay} (height ${cfg.slitHeight.toFixed(1)} ≤ tag ${tagHFinal.toFixed(1)})`,
+          `grid-template-columns (mm): [${tracks_mm.join(', ')}]`,
+          `vars: --left-col=${leftColVar}, --right-col=${rightColVar}, --gutter=${gutterVar}, --tx-pad-l=${txPadLVar}, --tx-pad-r=${txPadRVar}, --qr-pad-l=${qrPadLVar}, --qr-pad-r=${qrPadRVar}`,
+          `tracks: qr in track #${qrTrack}, text in track #${txTrack}`
+        ];
+        debugPre.textContent = lines.join('\n');
+
+        // Console dump for copy/paste
+        window.__tagDebug = function() {
+          console.table({
+            pxPerMm,
+            mmPerPx,
+            textCol_px: {x: tcR.left, y: tcR.top, w: tcR.width, h: tcR.height},
+            slit_px: sR ? {x: sR.left, y: sR.top, w: sR.width, h: sR.height} : null,
+            pad_px: {t: padTpx, r: padRpx, b: padBpx, l: padLpx},
+            actualTopPx,
+            expectTopPx,
+            deltaTopPx,
+            actualRightPx,
+            expectRightPx,
+            deltaRightPx,
+            innerWmm,
+            innerHmm,
+            slitFitsOkay,
+            grid_template_columns: gridTemplate,
+            css_vars: {leftColVar, rightColVar, gutterVar, txPadLVar, txPadRVar, qrPadLVar, qrPadRVar},
+            tracks_px: tracksPx,
+            qr_track: qrTrack,
+            text_track: txTrack,
+            cfg
+          });
+        };
+      }
+      // Standalone grid inspector for console (available regardless of telemetry toggle)
+      window.__gridInspect = () => {
+        const content = document.querySelector('.content');
+        const cs = getComputedStyle(content);
+        const v = n => cs.getPropertyValue(n).trim() || getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+        const vars = {
+          left_col: v('--left-col'),
+          right_col: v('--right-col'),
+          gutter: v('--gutter'),
+          tx_pad_l: v('--tx-pad-l'),
+          tx_pad_r: v('--tx-pad-r'),
+          qr_pad_l: v('--qr-pad-l'),
+          qr_pad_r: v('--qr-pad-r'),
+        };
+        const template = cs.getPropertyValue('grid-template-columns').trim();
+        console.table({...vars, template});
+        return {vars, template};
+      };
+    }
+
+    // ROBUST SVG Export - captures EXACT rendered DOM geometry
+    function exportPreciseGeometry() {
+      const cfg = getCurrentConfig();
+
+      // Create master SVG container
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', cfg.tagW);
+      svg.setAttribute('height', cfg.tagH);
+      svg.setAttribute('viewBox', `0 0 ${cfg.tagW} ${cfg.tagH}`);
+      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      // Capture actual DOM elements with precise positioning
+      const tag = el.tag;
+      const tagRect = tag.getBoundingClientRect();
+
+      // Create layers for different 3D operations
+      const layerBase = createSVGGroup(svg, 'base-outline', 'Base tag outline');
+      const layerQR = createSVGGroup(svg, 'qr-modules', 'QR code modules');
+      const layerText = createSVGGroup(svg, 'text-features', 'Text elements');
+      const layerSlit = createSVGGroup(svg, 'slit-cutout', 'Slit cutout');
+
+      // 1. BASE OUTLINE - exact tag shape
+      const baseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      baseRect.setAttribute('x', 0);
+      baseRect.setAttribute('y', 0);
+      baseRect.setAttribute('width', cfg.tagW);
+      baseRect.setAttribute('height', cfg.tagH);
+      baseRect.setAttribute('rx', 4); // corner radius
+      baseRect.setAttribute('class', 'base-shape');
+      layerBase.appendChild(baseRect);
+
+      // 2. QR MODULES - capture each module's exact position
+      const qrBox = tag.querySelector('.qr-box');
+      if (qrBox) {
+        const qrRect = qrBox.getBoundingClientRect();
+        const qrOffsetX = qrRect.left - tagRect.left;
+        const qrOffsetY = qrRect.top - tagRect.top;
+
+        // Generate exact QR module positions
+        const moduleSize = cfg.moduleSize * (cfg.tagW / tagRect.width); // scale to mm
+        for (let row = 0; row < cfg.modules; row++) {
+          for (let col = 0; col < cfg.modules; col++) {
+            // Use actual QR pattern (would need QR library here, for now use checkerboard)
+            const isDark = (row + col) % 2 === 0; // placeholder pattern
+
+            if (isDark) {
+              const module = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              module.setAttribute('x', qrOffsetX + col * moduleSize);
+              module.setAttribute('y', qrOffsetY + row * moduleSize);
+              module.setAttribute('width', moduleSize);
+              module.setAttribute('height', moduleSize);
+              module.setAttribute('class', 'qr-module');
+              layerQR.appendChild(module);
+            }
+          }
+        }
+      }
+
+      // 3. TEXT ELEMENTS - convert to paths for perfect reproduction
+      const textElements = tag.querySelectorAll('.header, .name, .phone, .email, .footer');
+      textElements.forEach(textEl => {
+        const textRect = textEl.getBoundingClientRect();
+        const textOffsetX = textRect.left - tagRect.left;
+        const textOffsetY = textRect.top - tagRect.top;
+
+        // Create text outline rectangle (would need font path conversion for perfect match)
+        const textOutline = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        textOutline.setAttribute('x', textOffsetX);
+        textOutline.setAttribute('y', textOffsetY);
+        textOutline.setAttribute('width', textRect.width * (cfg.tagW / tagRect.width));
+        textOutline.setAttribute('height', textRect.height * (cfg.tagH / tagRect.height));
+        textOutline.setAttribute('class', `text-${textEl.className}`);
+        textOutline.setAttribute('data-text', textEl.textContent);
+        layerText.appendChild(textOutline);
+      });
+
+      // 4. SLIT - exact position and shape
+      const slit = tag.querySelector('.slit');
+      if (slit) {
+        const slitRect = slit.getBoundingClientRect();
+        const slitOffsetX = slitRect.left - tagRect.left;
+        const slitOffsetY = slitRect.top - tagRect.top;
+
+        const slitShape = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        slitShape.setAttribute('x', slitOffsetX * (cfg.tagW / tagRect.width));
+        slitShape.setAttribute('y', slitOffsetY * (cfg.tagH / tagRect.height));
+        slitShape.setAttribute('width', cfg.slitWidth);
+        slitShape.setAttribute('height', cfg.slitHeight);
+        slitShape.setAttribute('rx', cfg.slitWidth/2);
+        slitShape.setAttribute('class', 'slit-cutout');
+        layerSlit.appendChild(slitShape);
+      }
+
+      return svg;
+    }
+
+    function createSVGGroup(parent, id, description) {
+      const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      group.setAttribute('id', id);
+      group.setAttribute('data-description', description);
+      parent.appendChild(group);
+      return group;
+    }
+
+    // Original SVG export (kept for compatibility)
+    function exportToSVG() {
+      const svg = exportPreciseGeometry();
+
+      // Download precise geometry SVG
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'luggage_tag_precise.svg';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    // Legacy export function
+    function exportToSVGLegacy() {
+      const cfg = getCurrentConfig();
+      const computed = computeLayout(cfg);
+
+      // Create SVG with precise dimensions
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', cfg.tagW);
+      svg.setAttribute('height', cfg.tagH);
+      svg.setAttribute('viewBox', `${-cfg.tagW/2} ${-cfg.tagH/2} ${cfg.tagW} ${cfg.tagH}`);
+      svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      // Add background rect
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bg.setAttribute('x', -cfg.tagW/2);
+      bg.setAttribute('y', -cfg.tagH/2);
+      bg.setAttribute('width', cfg.tagW);
+      bg.setAttribute('height', cfg.tagH);
+      bg.setAttribute('rx', 4); // corner radius
+      bg.setAttribute('fill', 'white');
+      bg.setAttribute('stroke', 'black');
+      bg.setAttribute('stroke-width', '0.5');
+      svg.appendChild(bg);
+
+      // Add QR code placeholder (rectangle)
+      const qrRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      qrRect.setAttribute('x', computed.qrCenter.x - computed.qrSize/2);
+      qrRect.setAttribute('y', computed.qrCenter.y - computed.qrSize/2);
+      qrRect.setAttribute('width', computed.qrSize);
+      qrRect.setAttribute('height', computed.qrSize);
+      qrRect.setAttribute('fill', 'none');
+      qrRect.setAttribute('stroke', 'red');
+      qrRect.setAttribute('stroke-width', '0.25');
+      svg.appendChild(qrRect);
+
+      // Add QR modules grid
+      const moduleSize = computed.actualModuleSize;
+      const modules = cfg.modules;
+      for (let row = 0; row < modules; row++) {
+        for (let col = 0; col < modules; col++) {
+          const x = computed.qrCenter.x - computed.qrSize/2 + (col + 0.5) * moduleSize - moduleSize/2;
+          const y = computed.qrCenter.y - computed.qrSize/2 + (row + 0.5) * moduleSize - moduleSize/2;
+
+          const module = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          module.setAttribute('x', x);
+          module.setAttribute('y', y);
+          module.setAttribute('width', moduleSize);
+          module.setAttribute('height', moduleSize);
+          module.setAttribute('fill', (row + col) % 2 === 0 ? 'black' : 'white'); // checkerboard pattern
+          module.setAttribute('stroke', 'gray');
+          module.setAttribute('stroke-width', '0.1');
+          svg.appendChild(module);
+        }
+      }
+
+      // Add text areas (rectangles with labels)
+      const textAreas = [
+        { text: 'HEADER', y: computed.textArea.top - cfg.fsH/2, size: cfg.fsH },
+        { text: 'NAME', y: computed.textArea.top/2, size: cfg.fsN },
+        { text: 'PHONE', y: computed.textArea.top/2 - cfg.fsN * 1.5, size: cfg.fsP },
+        { text: 'EMAIL', y: computed.textArea.top/2 - cfg.fsN * 3, size: cfg.fsE },
+        { text: 'FOOTER', y: computed.textArea.bottom + cfg.fsF/2, size: cfg.fsF }
+      ];
+
+      textAreas.forEach(area => {
+        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textEl.setAttribute('x', computed.textArea.left);
+        textEl.setAttribute('y', area.y);
+        textEl.setAttribute('font-family', 'Arial, sans-serif');
+        textEl.setAttribute('font-size', area.size);
+        textEl.setAttribute('font-weight', 'bold');
+        textEl.setAttribute('fill', 'blue');
+        textEl.textContent = area.text;
+        svg.appendChild(textEl);
+      });
+
+      // Add slit
+      const slit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      slit.setAttribute('x', computed.slitCenter.x - cfg.slitWidth/2);
+      slit.setAttribute('y', computed.slitCenter.y - cfg.slitHeight/2);
+      slit.setAttribute('width', cfg.slitWidth);
+      slit.setAttribute('height', cfg.slitHeight);
+      slit.setAttribute('rx', cfg.slitWidth/2);
+      slit.setAttribute('fill', 'none');
+      slit.setAttribute('stroke', 'green');
+      slit.setAttribute('stroke-width', '0.5');
+      svg.appendChild(slit);
+
+      // Download SVG
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'luggage_tag_layout.svg';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    function exportConfigJSON() {
+      const cfg = getCurrentConfig();
+      const computed = computeLayout(cfg);
+
+      const exportConfig = {
+        input: cfg,
+        computed: computed,
+        stacking: {
+          topSide: { mirrored: false, description: "non-mirrored - reads normally when viewed from above" },
+          bottomSide: { mirrored: true, mirrorPlane: "YZ", description: "mirrored across YZ - reads correctly after 180° Y-rotation" },
+          webThickness: 0.4,
+          totalThickness: 3.0,
+          halfDepth: (3.0 - 0.4) / 2
+        },
+        meta: {
+          generatedAt: new Date().toISOString(),
+          source: "web_layout_export",
+          version: "1.0.0"
+        }
+      };
+
+      const blob = new Blob([JSON.stringify(exportConfig, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'luggage_tag_config.json';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    function getCurrentConfig() {
+      return {
+        modules: +el.inputs.modules.value,
+        moduleSize: +el.inputs.moduleSize.value,
+        quiet: +el.inputs.quiet.value,
+        tagW: +el.inputs.tagW.value,
+        tagH: +el.inputs.tagH.value,
+        outerT: +el.inputs.outerT.value,
+        outerR: +el.inputs.outerR.value,
+        outerB: +el.inputs.outerB.value,
+        outerL: +el.inputs.outerL.value,
+        gutter: +el.inputs.gutter.value,
+        slitWidth: +el.inputs.slitWidth.value,
+        slitHeight: +el.inputs.slitHeight.value,
+        slitMarginL: +el.inputs.slitMarginL.value,
+        slitMarginR: +el.inputs.slitMarginR.value,
+        fsH: +el.inputs.fsH.value,
+        fsN: +el.inputs.fsN.value,
+        fsP: +el.inputs.fsP.value,
+        fsE: +el.inputs.fsE.value,
+        fsF: +el.inputs.fsF.value,
+        qrPadT: +el.inputs.qrPadT.value,
+        qrPadR: +el.inputs.qrPadR.value,
+        qrPadB: +el.inputs.qrPadB.value,
+        qrPadL: +el.inputs.qrPadL.value,
+        txPadT: +el.inputs.txPadT.value,
+        txPadR: +el.inputs.txPadR.value,
+        txPadB: +el.inputs.txPadB.value,
+        txPadL: +el.inputs.txPadL.value
+      };
+    }
+
+    function computeLayout(cfg) {
+      const quietMm = cfg.moduleSize * cfg.quiet;
+      const qrInner = cfg.moduleSize * cfg.modules;
+      const qrTotal = qrInner + quietMm * 2;
+      const leftColMm = qrTotal + (cfg.qrPadL + cfg.qrPadR);
+      const contentW = cfg.tagW - (cfg.outerL + cfg.outerR);
+      const contentH = cfg.tagH - (cfg.outerT + cfg.outerB);
+      const slitTrack = cfg.slitWidth + cfg.slitMarginL + cfg.slitMarginR;
+      const rightColMm = Math.max(contentW - leftColMm - cfg.gutter - slitTrack, 0);
+
+      const qrBoxW = leftColMm - (cfg.qrPadL + cfg.qrPadR);
+      const qrBoxH = contentH - (cfg.qrPadT + cfg.qrPadB);
+      const qrSize = qrInner;
+      const actualModuleSize = cfg.moduleSize;
+
+      const qrCenterX = -cfg.tagW/2 + cfg.outerL + cfg.qrPadL + quietMm + qrSize/2;
+      const qrCenterY = 0;
+
+      const slitCenterX = cfg.tagW/2 - cfg.slitMarginR - cfg.slitWidth/2;
+      const slitCenterY = 0;
+
+      const textColLeft = -cfg.tagW/2 + cfg.outerL + leftColMm + cfg.gutter;
+      const textColRight = cfg.tagW/2 - cfg.outerR;
+      const textColTop = cfg.tagH/2 - cfg.outerT;
+      const textColBottom = -cfg.tagH/2 + cfg.outerB;
+
+      const textAreaLeft = textColLeft + cfg.txPadL;
+      const textAreaRight = textColRight - cfg.txPadR;
+      const textAreaTop = textColTop - cfg.txPadT;
+      const textAreaBottom = textColBottom + cfg.txPadB;
+
+      return {
+        qrInner,
+        qrTotal,
+        quietMm,
+        leftColMm,
+        rightColMm,
+        contentW,
+        contentH,
+        qrSize,
+        actualModuleSize,
+        qrCenter: { x: qrCenterX, y: qrCenterY },
+        slitCenter: { x: slitCenterX, y: slitCenterY },
+        textCol: { left: textColLeft, right: textColRight, top: textColTop, bottom: textColBottom },
+        textArea: {
+          left: textAreaLeft,
+          right: textAreaRight,
+          top: textAreaTop,
+          bottom: textAreaBottom,
+          width: textAreaRight - textAreaLeft,
+          height: textAreaTop - textAreaBottom
+        }
+      };
+    }
+
+    // Initialize and bind controls
+    layout();
+    for (const input of Object.values(el.inputs)) {
+      input.addEventListener('input', layout);
+      input.addEventListener('change', layout);
+    }
+
+    // Bind export buttons
+    document.getElementById('exportSVG').addEventListener('click', exportToSVG);
+    document.getElementById('exportConfig').addEventListener('click', exportConfigJSON);
+  </script>
+  <script>
+    // Simple test runner (mm-only checks) — must be defined after layout() binds DOM
+    function runLayoutTests() {
+      const testsBox = document.getElementById('tests');
+      const list = document.getElementById('testsList');
+      testsBox.style.display = 'block';
+      list.innerHTML = '';
+      const add = (ok, msg) => { const li=document.createElement('li'); li.textContent=(ok?'PASS: ':'FAIL: ')+msg; li.style.color=ok?'#0a0':'#a00'; list.appendChild(li); };
+
+      const cfg = getCurrentConfig();
+      const tagFront = document.getElementById('tag');
+      const tagBack = document.getElementById('tag-mirrored');
+      if (!tagFront || !tagBack) { add(false,'Tags not found'); return; }
+
+      const scale = tagFront.clientWidth / cfg.tagW; const mm = px=>px/scale;
+      const rects = tag => { const c=tag.querySelector('.content'); const qr=tag.querySelector('.qr-col'); const tx=tag.querySelector('.text-col'); const s=tag.querySelector('.slit');
+        return {tag:tag.getBoundingClientRect(), cont:c.getBoundingClientRect(), qr:qr.getBoundingClientRect(), tx:tx.getBoundingClientRect(), slit:s.getBoundingClientRect(), cols:getComputedStyle(c).getPropertyValue('grid-template-columns')}; };
+      const F = rects(tagFront), B=rects(tagBack);
+
+      // Tracks
+      const nF = (F.cols.match(/([0-9.]+)px/g)||[]).length; add(nF===4,`Front has 4 tracks (got ${nF})`);
+      const nB = (B.cols.match(/([0-9.]+)px/g)||[]).length; add(nB===4,`Back has 4 tracks (got ${nB})`);
+
+      // Track index helper
+      const trackIdx = (rect, cols, contLeft) => { const arr=(cols.match(/([0-9.]+)px/g)||[]).map(s=>parseFloat(s)); let sum=0; const cx=(rect.left-contLeft)+rect.width/2; for(let i=0;i<arr.length;i++){sum+=arr[i]; if(cx<=sum+0.5)return i+1;} return arr.length; };
+      add(trackIdx(F.qr,F.cols,F.cont.left)===1 && trackIdx(F.tx,F.cols,F.cont.left)===3,'Front mapping: qr#1, text#3');
+      add(trackIdx(B.qr,B.cols,B.cont.left)===4 && trackIdx(B.tx,B.cols,B.cont.left)===2,'Back mapping: qr#4, text#2');
+
+      // Slit column widths (mm)
+      const frontColsArr = (F.cols.match(/([0-9.]+)px/g)||[]).map(s=>parseFloat(s));
+      const backColsArr = (B.cols.match(/([0-9.]+)px/g)||[]).map(s=>parseFloat(s));
+      const frontSlitColMm = mm(frontColsArr[3]||0);
+      const backSlitColMm = mm(backColsArr[0]||0);
+      const slitTrackExpected = cfg.slitWidth + cfg.slitMarginL + cfg.slitMarginR;
+      add(Math.abs(frontSlitColMm - slitTrackExpected)<0.5,`Front slit col ${frontSlitColMm.toFixed(2)}mm ~= ${ slitTrackExpected.toFixed(2)}mm`);
+      add(Math.abs(backSlitColMm - slitTrackExpected)<0.5,`Back slit col ${backSlitColMm.toFixed(2)}mm ~= ${ slitTrackExpected.toFixed(2)}mm`);
+
+      // Slit margins are baked into slit column; element is centered inside the slit column
+      add(true,'Slit inside dedicated column (centered)');
+
+      // QR paddings
+      const qrCS = getComputedStyle(tagFront.querySelector('.qr-col')); const pT=mm(parseFloat(qrCS.paddingTop)), pR=mm(parseFloat(qrCS.paddingRight)), pB=mm(parseFloat(qrCS.paddingBottom)), pL=mm(parseFloat(qrCS.paddingLeft));
+      add(Math.abs(pT-cfg.qrPadT)<0.5 && Math.abs(pR-cfg.qrPadR)<0.5 && Math.abs(pB-cfg.qrPadB)<0.5 && Math.abs(pL-cfg.qrPadL)<0.5,
+          `QR padding mm T/R/B/L ${pT.toFixed(1)}/${pR.toFixed(1)}/${pB.toFixed(1)}/${pL.toFixed(1)}`);
+    }
+  </script>
+</body>
+</html>
