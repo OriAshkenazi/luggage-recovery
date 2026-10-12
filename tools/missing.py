@@ -73,8 +73,8 @@ def main():
     ap.add_argument("--note", default="")
     ap.add_argument("--path", default=os.environ.get("REGISTRY_PATH", "registry.jsonl"))
     args = ap.parse_args()
-    val = True if args._get_kwargs() and args.__dict__["set"] == "true" else False
-    toggle(Path(args.path), args.uid, val, args.note)
+    toggle(Path(args.path), args.uid, args.set == "true", args.note)
+    print(f"{args.uid}: missing={args.set}")
 
 
 if __name__ == "__main__":
