@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Vous avez trouvé mon bagage ? · Contacter Ori"
+  },
+  "brand": "Récupération de bagages",
+  "lang": {
+    "label": "Langue",
+    "short": "FR",
+    "name": "Français"
+  },
+  "hero": {
+    "eyebrow": "Vous avez scanné mon étiquette",
+    "title": "Vous avez trouvé<br>mon bagage ?",
+    "lead": "Merci pour votre honnêteté.<br>Un seul geste suffit pour me joindre.",
+    "owner": "Ce bagage appartient à <strong>Ori Ashkenazi</strong>."
+  },
+  "contact": {
+    "title": "Me contacter",
+    "whatsapp": "WhatsApp",
+    "whatsapp_sub": "La réponse la plus rapide",
+    "call": "Appeler",
+    "sms": "SMS",
+    "email": "E-mail"
+  },
+  "messages": {
+    "greeting": "Bonjour Ori, j’ai trouvé votre bagage. Comment vous le rendre ? / Hi Ori, I found your luggage! How can I return it to you?",
+    "email_subject": "J’ai trouvé votre bagage / Found your luggage",
+    "email_body": "Bonjour Ori,\n\nJ’ai trouvé votre bagage. Comment vous le rendre ?\n(Hi Ori, I found your luggage. How can I return it to you?)\n\nOù je l’ai trouvé / Where I found it: \nQuand / When: \n\nMerci !"
+  },
+  "form": {
+    "title": "Ou laissez un message",
+    "description": "Je vous répondrai dès que possible.",
+    "name": "Votre nom",
+    "contact": "Votre téléphone ou e-mail",
+    "contact_placeholder": "Pour que je puisse vous répondre",
+    "location": "Où l’avez-vous trouvé ?",
+    "location_placeholder": "Aéroport, hôtel, rue…",
+    "message": "Message",
+    "message_placeholder": "Tout détail qui m’aide à vous retrouver",
+    "submit": "Envoyer le message",
+    "required": "Ce champ est obligatoire",
+    "sent": "Merci ! Votre message a été envoyé.",
+    "failed": "L’envoi a échoué. Utilisez WhatsApp, un appel ou l’e-mail ci-dessus."
+  },
+  "thanks": {
+    "title": "Merci",
+    "message": "Perdre un bagage est stressant. Les personnes qui prennent une minute pour le rendre rendent les voyages meilleurs pour tous."
+  },
+  "footer": {
+    "system": "Récupération de bagages perdus",
+    "github": "Voir sur GitHub"
+  }
+}

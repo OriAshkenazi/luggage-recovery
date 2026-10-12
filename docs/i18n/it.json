@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Hai trovato il mio bagaglio? · Contatta Ori"
+  },
+  "brand": "Recupero bagagli",
+  "lang": {
+    "label": "Lingua",
+    "short": "IT",
+    "name": "Italiano"
+  },
+  "hero": {
+    "eyebrow": "Hai scansionato la mia etichetta",
+    "title": "Hai trovato<br>il mio bagaglio?",
+    "lead": "Grazie per la tua onestà.<br>Contattarmi richiede un solo tocco.",
+    "owner": "Questo bagaglio appartiene a <strong>Ori Ashkenazi</strong>."
+  },
+  "contact": {
+    "title": "Contattami",
+    "whatsapp": "WhatsApp",
+    "whatsapp_sub": "Risposta più rapida",
+    "call": "Chiama",
+    "sms": "SMS",
+    "email": "Email"
+  },
+  "messages": {
+    "greeting": "Ciao Ori, ho trovato il tuo bagaglio. Come posso restituirtelo? / Hi Ori, I found your luggage! How can I return it to you?",
+    "email_subject": "Ho trovato il tuo bagaglio / Found your luggage",
+    "email_body": "Ciao Ori,\n\nho trovato il tuo bagaglio. Come posso restituirtelo?\n(Hi Ori, I found your luggage. How can I return it to you?)\n\nDove l’ho trovato / Where I found it: \nQuando / When: \n\nGrazie!"
+  },
+  "form": {
+    "title": "Oppure lascia un messaggio",
+    "description": "Ti risponderò il prima possibile.",
+    "name": "Il tuo nome",
+    "contact": "Il tuo telefono o email",
+    "contact_placeholder": "Così posso risponderti",
+    "location": "Dove l’hai trovato?",
+    "location_placeholder": "Aeroporto, hotel, strada…",
+    "message": "Messaggio",
+    "message_placeholder": "Qualsiasi dettaglio che mi aiuti a trovarti",
+    "submit": "Invia messaggio",
+    "required": "Campo obbligatorio",
+    "sent": "Grazie! Il messaggio è stato inviato.",
+    "failed": "Invio non riuscito. Usa WhatsApp, una chiamata o l’email qui sopra."
+  },
+  "thanks": {
+    "title": "Grazie",
+    "message": "Perdere un bagaglio è stressante. Chi dedica un minuto a restituirlo rende i viaggi migliori per tutti."
+  },
+  "footer": {
+    "system": "Recupero bagagli smarriti",
+    "github": "Vedi su GitHub"
+  }
+}

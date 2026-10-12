@@ -1,7 +1,8 @@
 /**
  * Lost Luggage Recovery: progressive enhancement.
  * The page works without this script (English, plain links, a normal form POST).
- * With it: Hebrew/English switching, localized pre-filled messages, inline form
+ * With it: English, Hebrew and an optional third language for the current trip
+ * (docs/trip.json), localized pre-filled messages, inline form
  * validation, an in-page submit, and offline caching.
  */
 (function () {
@@ -10,8 +11,9 @@
     if (!document.querySelector || !window.fetch) return;
 
     var OWNER = { phone: '972509713042', email: 'oriashkenazi93@gmail.com' };
-    var SUPPORTED = ['en', 'he'];
-    var RTL = { he: true };
+    var SUPPORTED = ['en', 'he'];  // always offered; trip.json may add one destination language
+    var DESTINATIONS = ['es', 'fr', 'de', 'it', 'el', 'ar'];  // files in i18n/
+    var RTL = { he: true, ar: true };
     var strings = {};
     var lang = 'en';
 
@@ -62,6 +64,29 @@
             btn.setAttribute('aria-pressed', String(btn.getAttribute('data-lang') === lang));
         });
         updateContactLinks();
+    }
+
+    // Third button for the destination of the current trip, set in trip.json
+    function addTripLanguage() {
+        return fetch('trip.json').then(function (res) {
+            return res.ok ? res.json() : {};
+        }).then(function (trip) {
+            var code = trip && trip.destination_language;
+            if (!code || SUPPORTED.indexOf(code) !== -1 || DESTINATIONS.indexOf(code) === -1) return;
+            return load(code).then(function (data) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'lang-switch__btn';
+                btn.setAttribute('data-lang', code);
+                btn.setAttribute('lang', code);
+                btn.setAttribute('aria-pressed', 'false');
+                btn.setAttribute('aria-label', data.lang.name);
+                btn.textContent = data.lang.short;
+                btn.addEventListener('click', function () { setLanguage(code); });
+                $('.lang-switch').appendChild(btn);
+                SUPPORTED.push(code);
+            });
+        }).catch(function () {});
     }
 
     function setLanguage(code) {
@@ -165,6 +190,7 @@
         });
         // English always loads first and no language choice is stored between visits.
         load('en').catch(function () {});
+        addTripLanguage();
         initForm();
 
         if ('serviceWorker' in navigator) {

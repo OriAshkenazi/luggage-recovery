@@ -4,13 +4,15 @@
   },
   "brand": "Luggage recovery",
   "lang": {
-    "label": "Language"
+    "label": "Language",
+    "short": "EN",
+    "name": "English"
   },
   "hero": {
-    "eyebrow": "You scanned my tag",
+    "eyebrow": "You scanned my tag",
     "title": "Found my<br>luggage?",
-    "lead": "Thank you for being honest.<br>Reaching me takes one tap.",
-    "owner": "This bag belongs to <strong>Ori Ashkenazi</strong>."
+    "lead": "Thank you for being honest.<br>Reaching me takes one tap.",
+    "owner": "This bag belongs to <strong>Ori Ashkenazi</strong>."
   },
   "contact": {
     "title": "Contact me",
@@ -27,7 +29,7 @@
   },
   "form": {
     "title": "Or leave a message",
-    "description": "I'll get back to you as soon as I can.",
+    "description": "I'll get back to you as soon as I can.",
     "name": "Your name",
     "contact": "Your phone or email",
     "contact_placeholder": "So I can reach you back",

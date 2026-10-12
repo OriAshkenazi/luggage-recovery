@@ -46,12 +46,32 @@ in the `action` URL.
 
 ## Languages
 
-Translations mirror the English element by element: same meaning, nothing added or dropped. Hebrew is gender-neutral: neutral spellings (מצאת, אליך), infinitives and nouns, never imperatives (השאר / השאירי).
+The picker always offers English and Hebrew. Before a trip, set the destination's language in
+`trip.json` to add a third button:
 
-English is always shown first; nothing is remembered between visits. Hebrew switches the page to
-`dir="rtl"`, mirrors directional icons and drops letter-spacing and capitals. Add a language by
-adding `i18n/<code>.json` with the same keys and a button in `.lang-switch`; add `<code>` to
-`SUPPORTED` (and `RTL` if needed) in `script.js`.
+```json
+{ "destination_language": "el" }
+```
+
+Available: `es` Spanish, `fr` French, `de` German, `it` Italian, `el` Greek, `ar` Arabic
+(right-to-left). `null` shows English and Hebrew only. Commit and push; the page picks it up on
+the next visit.
+
+- English is always shown first; nothing is remembered between visits.
+- Translations mirror the English element by element: same meaning, nothing added or dropped.
+  Hebrew is gender-neutral: neutral spellings (מצאת, אליך), infinitives and nouns, never
+  imperatives (השאר / השאירי).
+- Pre-filled WhatsApp, SMS and email messages in a destination language include the English
+  too, so the owner can read what the finder sends.
+- Headlines size themselves from their column and the language's longest line
+  (`--title-chars` in `style.css`), so each language keeps two lines from 320 px up.
+- Assistant covers Latin and Hebrew; Greek and Arabic use the system font.
+- The non-English translations were written without a native-speaker review; have one checked
+  before relying on it.
+
+To add a language: create `i18n/<code>.json` with the same keys as `en.json` (tests enforce it),
+add `<code>` to `DESTINATIONS` (and `RTL` if needed) in `script.js`, and give it a
+`--title-chars` value in `style.css`.
 
 ## Checks
 

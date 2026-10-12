@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "¿Encontraste mi equipaje? · Contactar con Ori"
+  },
+  "brand": "Recuperación de equipaje",
+  "lang": {
+    "label": "Idioma",
+    "short": "ES",
+    "name": "Español"
+  },
+  "hero": {
+    "eyebrow": "Escaneaste mi etiqueta",
+    "title": "¿Encontraste<br>mi equipaje?",
+    "lead": "Gracias por tu honestidad.<br>Contactarme es cuestión de un toque.",
+    "owner": "Este equipaje pertenece a <strong>Ori Ashkenazi</strong>."
+  },
+  "contact": {
+    "title": "Contáctame",
+    "whatsapp": "WhatsApp",
+    "whatsapp_sub": "La respuesta más rápida",
+    "call": "Llamar",
+    "sms": "Mensaje de texto",
+    "email": "Correo"
+  },
+  "messages": {
+    "greeting": "Hola Ori, encontré tu equipaje. ¿Cómo te lo devuelvo? / Hi Ori, I found your luggage! How can I return it to you?",
+    "email_subject": "Encontré tu equipaje / Found your luggage",
+    "email_body": "Hola Ori:\n\nEncontré tu equipaje. ¿Cómo te lo devuelvo?\n(Hi Ori, I found your luggage. How can I return it to you?)\n\nDónde lo encontré / Where I found it: \nCuándo / When: \n\n¡Gracias!"
+  },
+  "form": {
+    "title": "O deja un mensaje",
+    "description": "Te responderé lo antes posible.",
+    "name": "Tu nombre",
+    "contact": "Tu teléfono o correo",
+    "contact_placeholder": "Para poder responderte",
+    "location": "¿Dónde lo encontraste?",
+    "location_placeholder": "Aeropuerto, hotel, calle…",
+    "message": "Mensaje",
+    "message_placeholder": "Cualquier dato que me ayude a encontrarte",
+    "submit": "Enviar mensaje",
+    "required": "Este campo es obligatorio",
+    "sent": "¡Gracias! Tu mensaje se envió.",
+    "failed": "No se pudo enviar. Usa WhatsApp, una llamada o el correo de arriba."
+  },
+  "thanks": {
+    "title": "Gracias",
+    "message": "Perder el equipaje es estresante. Quienes dedican un minuto a devolverlo hacen que viajar sea mejor para todos."
+  },
+  "footer": {
+    "system": "Recuperación de equipaje perdido",
+    "github": "Ver en GitHub"
+  }
+}

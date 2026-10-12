@@ -1,0 +1,4 @@
+{
+  "_comment": "Third language button for the next trip: a code from docs/i18n (es, fr, de, it, el, ar) or null for English and Hebrew only.",
+  "destination_language": null
+}

@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Mein Gepäck gefunden? · Ori kontaktieren"
+  },
+  "brand": "Gepäckrückgabe",
+  "lang": {
+    "label": "Sprache",
+    "short": "DE",
+    "name": "Deutsch"
+  },
+  "hero": {
+    "eyebrow": "Sie haben meinen Anhänger gescannt",
+    "title": "Mein Gepäck<br>gefunden?",
+    "lead": "Danke für Ihre Ehrlichkeit.<br>Ein Tippen genügt, um mich zu erreichen.",
+    "owner": "Dieses Gepäck gehört <strong>Ori Ashkenazi</strong>."
+  },
+  "contact": {
+    "title": "Kontakt",
+    "whatsapp": "WhatsApp",
+    "whatsapp_sub": "Schnellste Antwort",
+    "call": "Anrufen",
+    "sms": "SMS",
+    "email": "E-Mail"
+  },
+  "messages": {
+    "greeting": "Hallo Ori, ich habe Ihr Gepäck gefunden. Wie kann ich es Ihnen zurückgeben? / Hi Ori, I found your luggage! How can I return it to you?",
+    "email_subject": "Ich habe Ihr Gepäck gefunden / Found your luggage",
+    "email_body": "Hallo Ori,\n\nich habe Ihr Gepäck gefunden. Wie kann ich es Ihnen zurückgeben?\n(Hi Ori, I found your luggage. How can I return it to you?)\n\nFundort / Where I found it: \nWann / When: \n\nDanke!"
+  },
+  "form": {
+    "title": "Oder eine Nachricht hinterlassen",
+    "description": "Ich melde mich so schnell wie möglich.",
+    "name": "Ihr Name",
+    "contact": "Ihre Telefonnummer oder E-Mail",
+    "contact_placeholder": "Damit ich mich melden kann",
+    "location": "Wo haben Sie es gefunden?",
+    "location_placeholder": "Flughafen, Hotel, Straße…",
+    "message": "Nachricht",
+    "message_placeholder": "Alles, was mir hilft, Sie zu finden",
+    "submit": "Nachricht senden",
+    "required": "Pflichtfeld",
+    "sent": "Danke! Ihre Nachricht wurde gesendet.",
+    "failed": "Senden fehlgeschlagen. Bitte nutzen Sie WhatsApp, einen Anruf oder die E-Mail oben."
+  },
+  "thanks": {
+    "title": "Danke",
+    "message": "Verlorenes Gepäck ist stressig. Wer sich eine Minute nimmt, um es zurückzugeben, macht Reisen für alle besser."
+  },
+  "footer": {
+    "system": "Rückgabe verlorenen Gepäcks",
+    "github": "Auf GitHub ansehen"
+  }
+}

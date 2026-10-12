@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "هل وجدت حقيبتي؟ · التواصل مع Ori"
+  },
+  "brand": "استعادة الأمتعة",
+  "lang": {
+    "label": "اللغة",
+    "short": "ع",
+    "name": "العربية"
+  },
+  "hero": {
+    "eyebrow": "لقد مسحت بطاقتي",
+    "title": "هل وجدت<br>حقيبتي؟",
+    "lead": "شكرًا على أمانتك.<br>يمكنك الوصول إليّ بلمسة واحدة.",
+    "owner": "هذه الحقيبة تخص <strong>Ori Ashkenazi</strong>."
+  },
+  "contact": {
+    "title": "للتواصل معي",
+    "whatsapp": "واتساب",
+    "whatsapp_sub": "أسرع رد",
+    "call": "اتصال هاتفي",
+    "sms": "رسالة نصية",
+    "email": "البريد الإلكتروني"
+  },
+  "messages": {
+    "greeting": "مرحبًا، وجدت حقيبتك. كيف يمكنني إعادتها إليك؟ / Hi Ori, I found your luggage! How can I return it to you?",
+    "email_subject": "وجدت حقيبتك / Found your luggage",
+    "email_body": "مرحبًا،\n\nوجدت حقيبتك. كيف يمكنني إعادتها إليك؟\n(Hi Ori, I found your luggage. How can I return it to you?)\n\nأين وجدتها / Where I found it: \nمتى / When: \n\nشكرًا!"
+  },
+  "form": {
+    "title": "أو ترك رسالة",
+    "description": "سأرد عليك في أقرب وقت ممكن.",
+    "name": "اسمك",
+    "contact": "هاتفك أو بريدك الإلكتروني",
+    "contact_placeholder": "حتى أتمكن من الرد عليك",
+    "location": "أين وجدتها؟",
+    "location_placeholder": "مطار، فندق، شارع…",
+    "message": "الرسالة",
+    "message_placeholder": "أي تفاصيل تساعدني في العثور عليك",
+    "submit": "إرسال الرسالة",
+    "required": "هذا الحقل مطلوب",
+    "sent": "شكرًا! تم إرسال رسالتك.",
+    "failed": "تعذّر الإرسال. يمكن استخدام واتساب أو الاتصال أو البريد الإلكتروني أعلاه."
+  },
+  "thanks": {
+    "title": "شكرًا",
+    "message": "فقدان الحقيبة أمر مرهق. من يخصص دقيقة لإعادتها يجعل السفر أفضل للجميع."
+  },
+  "footer": {
+    "system": "استعادة الأمتعة المفقودة",
+    "github": "عرض على GitHub"
+  }
+}

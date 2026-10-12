@@ -27,10 +27,29 @@ def _keys(d, prefix=""):
     return out
 
 
+def _langs():
+    return {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in sorted((DOCS / "i18n").glob("*.json"))}
+
+
 def test_languages_have_identical_keys():
-    en = json.loads((DOCS / "i18n" / "en.json").read_text(encoding="utf-8"))
-    he = json.loads((DOCS / "i18n" / "he.json").read_text(encoding="utf-8"))
-    assert _keys(en) == _keys(he)
+    langs = _langs()
+    for code, data in langs.items():
+        assert _keys(data) == _keys(langs["en"]), code
+
+
+def test_trip_language_is_configurable_and_valid():
+    script = (DOCS / "script.js").read_text()
+    destinations = json.loads(re.search(r"var DESTINATIONS = (\[[^\]]*\])", script).group(1).replace("'", '"'))
+    assert set(destinations) | {"en", "he"} == set(_langs())  # every offered language has a file
+    trip = json.loads((DOCS / "trip.json").read_text())
+    assert trip["destination_language"] in destinations + [None]
+    for code in ("he", "ar"):
+        assert f"{code}: true" in script  # right-to-left
+    for code, data in _langs().items():
+        assert data["lang"]["short"] and data["lang"]["name"], code
+        # Messages Ori receives stay readable: other languages carry the English too
+        if code not in ("en", "he"):
+            assert "I found your luggage" in data["messages"]["greeting"], code
 
 
 def test_every_i18n_key_exists_in_both_languages():
@@ -47,7 +66,7 @@ def test_every_i18n_key_exists_in_both_languages():
 
 def test_static_english_matches_en_json():
     """Without JavaScript the page shows the HTML text, so it must equal the English strings."""
-    en = json.loads((DOCS / "i18n" / "en.json").read_text(encoding="utf-8"))
+    en = _langs()["en"]
     for el in _html().select("[data-i18n]"):
         if el.name == "title":
             continue

@@ -90,12 +90,23 @@ a { color: var(--color-ink); }
 h1, h2, .hero__lead { text-wrap: balance; }
 p { text-wrap: pretty; }
 
-/* Hebrew: no tracking or caps, slightly looser line height */
-:lang(he) .eyebrow,
-:lang(he) .top-bar__brand,
-:lang(he) .hero__title { letter-spacing: 0; text-transform: none; }
-:lang(he) .eyebrow { font-size: 16px; }
-:lang(he) .hero__title { line-height: 1.02; }
+/* Hebrew and Arabic: no tracking or caps, slightly looser line height */
+:lang(he) .eyebrow, :lang(ar) .eyebrow,
+:lang(he) .top-bar__brand, :lang(ar) .top-bar__brand,
+:lang(he) .hero__title, :lang(ar) .hero__title { letter-spacing: 0; text-transform: none; }
+:lang(he) .eyebrow, :lang(ar) .eyebrow { font-size: 16px; }
+:lang(he) .hero__title, :lang(ar) .hero__title { line-height: 1.05; }
+
+/* Headline size follows its column and the longest line of each language, so every
+   translation keeps its two lines from a 320 px phone to desktop. */
+:root { --title-chars: 8; }
+:lang(he) { --title-chars: 10; }
+:lang(es) { --title-chars: 12; }
+:lang(fr) { --title-chars: 16; }
+:lang(de) { --title-chars: 11; }
+:lang(it) { --title-chars: 16; }
+:lang(el) { --title-chars: 14; }
+:lang(ar) { --title-chars: 8; }
 
 /* ---------------------------------------------------------------- yellow band */
 
@@ -115,10 +126,18 @@ p { text-wrap: pretty; }
     gap: var(--space-2);
 }
 .top-bar__brand {
+    min-width: 0;
+    white-space: nowrap;
     font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.14em;
     text-transform: uppercase;
+}
+
+/* Three languages on a narrow phone: the language buttons need the room */
+@media (max-width: 419px) {
+    .top-bar:has(.lang-switch__btn:nth-child(3)) .top-bar__brand { display: none; }
+    .top-bar:has(.lang-switch__btn:nth-child(3)) { justify-content: flex-end; }
 }
 
 .lang-switch {
@@ -128,9 +147,9 @@ p { text-wrap: pretty; }
     overflow: hidden;
 }
 .lang-switch__btn {
-    min-width: 56px;
+    min-width: var(--touch);
     min-height: var(--touch);
-    padding: 0 14px;
+    padding: 0 12px;
     border: 0;
     background: transparent;
     color: var(--color-ink);
@@ -156,13 +175,14 @@ p { text-wrap: pretty; }
 .hero {
     flex: 1 1 420px;
     min-width: 0;
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
 }
 .hero__title {
     margin: 0;
-    font-size: clamp(44px, 11vw, 84px);
+    font-size: min(84px, calc(100cqi / (var(--title-chars) * 0.64)));
     line-height: 0.93;
     font-weight: 800;
     text-transform: uppercase;

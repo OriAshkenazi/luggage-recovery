@@ -5,17 +5,18 @@
  * Other same-origin GETs (CSS, JS, font, icon): cache first, refreshed in the background.
  * Everything else (WhatsApp, Formspree, tel:, mailto:) goes straight to the network.
  */
-const CACHE = 'luggage-recovery-v4';
+const CACHE = 'luggage-recovery-v5';
 const PRECACHE = [
     './',
     'index.html',
-    'style.css?v=20261012',
-    'script.js?v=20261012',
+    'style.css?v=20261013',
+    'script.js?v=20261013',
     'fonts/assistant.woff',
     'favicon.svg',
     'manifest.json',
     'i18n/en.json',
     'i18n/he.json',
+    'trip.json',
 ];
 
 self.addEventListener('install', (event) => {
