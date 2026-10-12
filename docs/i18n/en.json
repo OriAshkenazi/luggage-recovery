@@ -1,37 +1,54 @@
 {
   "page": {
-    "title": "You Found My Luggage! 🧳 - Contact Ori"
+    "title": "Found my luggage? · Contact Ori"
+  },
+  "brand": "Luggage recovery",
+  "lang": {
+    "label": "Language"
+  },
+  "owner": {
+    "name": "Ori Ashkenazi"
   },
   "hero": {
-    "title": "You Found My Luggage!",
-    "subtitle": "Thank you for being honest and helpful! Please contact me using any method below:"
+    "eyebrow": "You scanned my tag",
+    "title": "Found my<br>luggage?",
+    "lead": "Thank you for being honest. Reaching me takes one tap.",
+    "owner": "This bag belongs to"
   },
   "contact": {
-    "title": "Contact Me",
+    "title": "Contact me",
     "whatsapp": "WhatsApp",
-    "whatsapp_sub": "Fastest response",
-    "sms": "Send SMS",
-    "email": "Send Email",
-    "call": "Call"
+    "whatsapp_sub": "Fastest reply",
+    "call": "Call",
+    "sms": "Text message",
+    "email": "Email"
+  },
+  "messages": {
+    "greeting": "Hi Ori, I found your luggage! How can I return it to you?",
+    "email_subject": "Found your luggage",
+    "email_body": "Hi Ori,\n\nI found your luggage. How can I return it to you?\n\nWhere I found it: \nWhen: \n\nThanks!"
   },
   "form": {
-    "title": "Send a Message",
-    "description": "If the above methods don't work, please fill out this form:",
-    "name": "Your Name",
-    "contact": "Your Phone/Email",
-    "contact_placeholder": "So I can contact you back",
+    "title": "Or leave a message",
+    "description": "I'll get back to you as soon as I can.",
+    "name": "Your name",
+    "contact": "Your phone or email",
+    "contact_placeholder": "So I can reach you back",
     "location": "Where did you find it?",
-    "location_placeholder": "Airport, hotel, street, etc.",
+    "location_placeholder": "Airport, hotel, street…",
     "message": "Message",
-    "message_placeholder": "Any additional details...",
-    "submit": "Send Message"
+    "message_placeholder": "Anything that helps me find you",
+    "submit": "Send message",
+    "required": "This field is required",
+    "sent": "Thank you! Your message was sent.",
+    "failed": "Sending failed. Please use WhatsApp, a call or email above."
   },
   "thanks": {
-    "title": "Thank You! 🙏",
-    "message": "Your honesty in contacting me means a lot! Lost luggage can be stressful, and people like you make traveling better for everyone."
+    "title": "Thank you",
+    "message": "Losing a bag is stressful. People who take a minute to return one make travel better for everyone."
   },
   "footer": {
-    "system": "Lost Luggage Recovery System",
+    "system": "Lost Luggage Recovery",
     "github": "View on GitHub"
   }
 }

@@ -1,20 +1,29 @@
 {
   "buttons": {
     "primary": {
-      "default": {"fg": "#FFFFFF", "bg": "#0B3D91"},
-      "hover":   {"fg": "#FFFFFF", "bg": "#08306B"}
+      "default": {"fg": "#FFFFFF", "bg": "#1A1A1A"},
+      "subtitle": {"fg": "#E6E3DA", "bg": "#1A1A1A"}
     },
     "secondary": {
-      "default": {"fg": "#000000", "bg": "#E9ECEF"},
-      "hover":   {"fg": "#000000", "bg": "#DEE2E6"}
+      "default": {"fg": "#1A1A1A", "bg": "#FFFFFF"},
+      "hover":   {"fg": "#1A1A1A", "bg": "#FFF8D6"},
+      "subtitle": {"fg": "#4A4740", "bg": "#FFFFFF"}
     },
-    "destructive": {
-      "default": {"fg": "#FFFFFF", "bg": "#B00020"}
+    "band": {
+      "default": {"fg": "#1A1A1A", "bg": "#F5C400"}
+    },
+    "language": {
+      "active":  {"fg": "#FFFFFF", "bg": "#1A1A1A"},
+      "default": {"fg": "#1A1A1A", "bg": "#F5C400"}
+    },
+    "form": {
+      "error":   {"fg": "#B3261E", "bg": "#FBFAF6"},
+      "success": {"fg": "#1D6B3A", "bg": "#FBFAF6"},
+      "muted":   {"fg": "#4A4740", "bg": "#FBFAF6"}
     },
     "link": {
-      "default": {"fg": "#0B3D91", "bg": "#FFFFFF", "large": true}
+      "default": {"fg": "#1A1A1A", "bg": "#FBFAF6"}
     }
   },
-  "focus": {"ring": "#1A73E8", "adjacent": "#FFFFFF"}
+  "focus": {"ring": "#0B57D0", "adjacent": "#FBFAF6"}
 }
-
