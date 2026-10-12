@@ -1,0 +1,8 @@
+# Copy to contact.local.yaml (git-ignored) and fill in. Every key is optional.
+name: Your Name
+phone: "+1 555 000 0000"
+email: you@example.com
+qr_url: https://example.github.io/luggage-recovery
+# header: IF FOUND, PLEASE CONTACT
+# prompt: FOUND MY LUGGAGE? SCAN ME
+# font_path: /path/to/Font-Bold.ttf

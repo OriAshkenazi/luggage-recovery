@@ -42,3 +42,8 @@ build/
 coverage.xml
 *.egg-info/
 registry.jsonl
+
+# Two-part tag: personal content and generated font instances
+3d-models/contact.local.yaml
+3d-models/.font-cache/
+outputs/

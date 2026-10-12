@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tag STL Viewer</title>
+  <style>
+    :root { --bg: #f4f5f7; --panel: #fff; --text: #1d2330; --muted: #5b6475; --accent: #0066cc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; }
+    header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid #dde1e7; }
+    header h1 { font-size: 15px; margin: 0 12px 0 0; }
+    .group { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { min-height: 36px; padding: 6px 12px; border: 1px solid #c8ced8; border-radius: 6px; background: #fff; color: var(--text); cursor: pointer; font: inherit; }
+    button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #stage { flex: 1; position: relative; min-height: 0; }
+    #info { position: absolute; left: 16px; bottom: 12px; color: var(--muted); background: rgba(255,255,255,.85); padding: 6px 10px; border-radius: 6px; white-space: pre-line; }
+    canvas { display: block; }
+  </style>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <!-- Serve 3d-models/ (python -m http.server -d 3d-models 8765) and open /viewer.html -->
+  <header>
+    <h1>Tag STL Viewer</h1>
+    <div id="models" class="group" role="group" aria-label="Model"></div>
+    <span style="flex:1"></span>
+    <div class="group">
+      <button id="flip">Flip (view back)</button>
+      <button id="explode" aria-pressed="false">Explode</button>
+      <button id="wire" aria-pressed="false">Wireframe</button>
+    </div>
+  </header>
+  <div id="stage"><div id="info">Loading…</div></div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const BASE = 0xf5c400, INLAY = 0x1a1a1a;
+    const DIR = 'outputs/two-part/';
+    const MODELS = [
+      { name: 'Assembled', explodable: true, parts: [
+        ['assembled/front_base.stl', BASE, 'front'], ['assembled/front_inlay.stl', INLAY, 'front'],
+        ['assembled/back_base.stl', BASE, 'back'], ['assembled/back_inlay.stl', INLAY, 'back']] },
+      { name: 'Front print plate', parts: [['front_base.stl', BASE], ['front_inlay.stl', INLAY]] },
+      { name: 'Back print plate', parts: [['back_base.stl', BASE], ['back_inlay.stl', INLAY]] },
+    ];
+
+    const stage = document.getElementById('stage');
+    const info = document.getElementById('info');
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    stage.appendChild(renderer.domElement);
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf4f5f7);
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 2000);
+    camera.up.set(0, 0, 1);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 1.6));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+    sun.position.set(40, -60, 120);
+    scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xffffff, 0.9);
+    fill.position.set(-40, 60, -120);
+    scene.add(fill);
+
+    const loader = new STLLoader();
+    const group = new THREE.Group();
+    scene.add(group);
+    let wire = false, exploded = false, current = null, manifest = null;
+
+    function resize() {
+      const { clientWidth: w, clientHeight: h } = stage;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function applyExplode() {
+      const gap = exploded && current && current.explodable ? 8 : 0;
+      group.children.forEach(m => {
+        if (m.userData.half === 'front') m.position.z = gap;
+        if (m.userData.half === 'back') m.position.z = -gap;
+        if (m.userData.nfc) m.visible = gap > 0;
+      });
+    }
+
+    async function show(model, button) {
+      current = model;
+      document.querySelectorAll('#models button').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+      group.clear();
+      group.rotation.set(0, 0, 0);
+      info.textContent = 'Loading…';
+      try {
+        if (!manifest) manifest = await fetch(DIR + 'manifest.json?t=' + Date.now()).then(r => r.json());
+        const geoms = await Promise.all(model.parts.map(([url]) => loader.loadAsync(DIR + url + '?t=' + Date.now())));
+        geoms.forEach((g, i) => {
+          g.computeVertexNormals();
+          const mat = new THREE.MeshStandardMaterial({ color: model.parts[i][1], roughness: 0.6, metalness: 0, wireframe: wire });
+          const mesh = new THREE.Mesh(g, mat);
+          mesh.userData.half = model.parts[i][2];
+          group.add(mesh);
+        });
+        if (model.explodable && manifest) {
+          // NFC sticker stand-in, shown in the exploded view
+          const b = manifest.build;
+          const disc = new THREE.Mesh(new THREE.CylinderGeometry(b.nfc_d / 2, b.nfc_d / 2, 0.4, 64), new THREE.MeshStandardMaterial({ color: 0x9aa3ad, wireframe: wire }));
+          disc.rotation.x = Math.PI / 2;
+          disc.position.set(manifest.positions.nfc[0], manifest.positions.nfc[1], -0.3);
+          disc.userData.nfc = true;
+          group.add(disc);
+        }
+        applyExplode();
+        const box = new THREE.Box3().setFromObject(group);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const fov = THREE.MathUtils.degToRad(camera.fov);
+        const dist = 1.25 * Math.max(size.y, size.x / camera.aspect) / (2 * Math.tan(fov / 2));
+        controls.target.copy(center);
+        camera.position.set(center.x, center.y - dist * 0.45, center.z + dist);
+        controls.update();
+        const tris = geoms.reduce((n, g) => n + g.attributes.position.count / 3, 0);
+        const [w, h, t] = manifest ? manifest.size_mm : [size.x, size.y, size.z];
+        info.textContent = `${model.name}\n${w} × ${h} × ${t} mm · ${Math.round(tris).toLocaleString()} triangles`;
+      } catch (e) {
+        info.textContent = 'Could not load: ' + e.message + '\nRun: python 3d-models/two_part_tag.py';
+      }
+    }
+
+    const bar = document.getElementById('models');
+    MODELS.forEach((m, i) => {
+      const b = document.createElement('button');
+      b.textContent = m.name;
+      b.addEventListener('click', () => show(m, b));
+      bar.appendChild(b);
+      if (i === 0) show(m, b);
+    });
+    // Flip like turning a tag over in your hand: about the vertical axis
+    document.getElementById('flip').addEventListener('click', () => { group.rotation.y += Math.PI; });
+    document.getElementById('explode').addEventListener('click', e => {
+      exploded = !exploded;
+      e.currentTarget.setAttribute('aria-pressed', String(exploded));
+      applyExplode();
+    });
+    document.getElementById('wire').addEventListener('click', e => {
+      wire = !wire;
+      e.currentTarget.setAttribute('aria-pressed', String(wire));
+      group.traverse(o => { if (o.material) o.material.wireframe = wire; });
+    });
+
+    renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+  </script>
+</body>
+</html>

@@ -1,116 +1,66 @@
-# Luggage Tag STL Generator
+# Two-part luggage tag
 
-## Features
-- Holds a 30×50 mm QR sticker on the front
-- Rear recess for Ø 25 mm NFC tag, 1 mm deep
-- Reinforced strap attachment with optional round hole or 5 × 20 mm slot
-- Filleted corners and minimum wall thickness of 1.5 mm
-- Supports multi-material and single-extruder colour change
+An 85 × 54 × 3.2 mm tag printed as two halves on a Bambu Lab P1S with AMS, each half
+two-colour: a light base with a flush dark inlay in its first three layers. The halves
+glue back-to-back with an NFC sticker sealed between them.
 
-## Install
+- **Front:** QR code (33 modules × 1.2 mm) to the recovery page, "Found my luggage?" prompt.
+- **Back:** contact details, readable when the tag is turned over.
+- **Inside:** Ø20 mm NFC pocket behind the QR, three Ø2 mm alignment pins.
+- **Strap hole:** Ø6 mm, 9 mm in from the top and side edges, with a printed ring.
+
+## Layout first
+
+The artwork is planned as an HTML/CSS page at 10 px = 1 mm (the "Luggage Tag Layout"
+design canvas), then mirrored in millimetres in [`layout.py`](layout.py): absolutely placed
+features plus flex columns with `gap` and `justify-content: space-between`.
+[`glyphs.py`](glyphs.py) lays text out with the same metrics a browser uses (hhea ascent and
+descent, advance widths, `kern` pairs, letter-spacing), so the STLs match the plan.
+
+Change the design in the canvas first, then carry the numbers into `layout.py`.
+
+## Generate
+
 ```bash
 pip install -r requirements.txt
+cp 3d-models/contact.example.yaml 3d-models/contact.local.yaml   # then edit; git-ignored
+python 3d-models/two_part_tag.py
 ```
-Supported: macOS (CI) and Windows 11. Python 3.11 is the supported version. Dependencies are fully pinned in `requirements.txt` for deterministic builds.
 
-## Usage
-Generate default models and previews:
+Outputs land in `3d-models/outputs/two-part/` (git-ignored): `front_base.stl`,
+`front_inlay.stl`, `back_base.stl`, `back_inlay.stl` in print orientation,
+`assembled/` copies for previewing, `manifest.json` and `PRINTING.md`.
+
+Flags override the contact file: `--name`, `--phone`, `--email`, `--qr_url`, `--font_path`,
+`--contact`, `--out`. The text font is Assistant (weights 700/800, instanced from the variable
+font and cached in `.font-cache/`); install it from Google Fonts or pass `--font_path`.
+
+## Preview
+
 ```bash
-python 3d-models/generate_tag.py --out 3d-models/outputs/ --previews svg --deterministic
-```
-Deterministic build with QR demo and manifest/checksums:
-```bash
-python 3d-models/generate_tag.py \
-  --out 3d-models/outputs/ \
-  --previews svg --deterministic \
-  --preset petg --qr_text "https://example.com/RECOVER?u=DEMO" \
-  --layer_height 0.20
-```
-Override parameters or load a YAML profile:
-```bash
-python 3d-models/generate_tag.py --qr_w 50 --qr_h 30 --qr_border 3 --slot 5x20
-python 3d-models/generate_tag.py --params 3d-models/params.yaml --qr_border 4
+python -m http.server -d 3d-models 8765
+# open http://localhost:8765/viewer.html
 ```
 
-## Variants
-- `base` – one-piece model with raised QR features for single-extruder color change
-- `flat` – shallow front pocket only for using a printed sticker
-- `islands` – split STLs for multi-material printing (`tag_alt_qr_islands_base.stl` and `tag_alt_qr_islands_features.stl`)
+Assembled view (flip, explode with the NFC sticker shown) and both print plates.
 
-## QR Workflow
-- Generate QR-driven islands from text:
-```bash
-python 3d-models/generate_tag.py \
-  --out 3d-models/outputs/ \
-  --variant islands \
-  --qr_text "https://example.com/RECOVER?u=DEMO" \
-  --previews svg --deterministic --preset petg --layer_height 0.20
-```
-- Or provide an external SVG payload with `--qr_svg path.svg`.
-- Sticker templates are always exported: `qr_sticker_30x50.svg` (and PNG if available). Print at 100% scale (300 DPI) to get exactly 30×50 mm. Includes 1 mm safe margin and two registration marks.
-- AMS vs. color-switch: For multi-material, use the `islands` STLs; for single-extruder, print `base` and change filament at `layer = round(island_h / layer_height)`.
+## Print rules the generator enforces
 
-## Printing
-- Material: PETG or ABS
-- Layer height: 0.2 mm
-- Perimeters: ≥4
-- Infill: 20–30 %
-- Top/Bottom: 5 layers
-- No supports required; add a brim if needed
+- The 0.4 mm nozzle is fixed. Straight inlay features (QR modules, rules, ring, arrow stroke)
+  are whole multiples of 0.4 mm.
+- No inlay stroke is thinner than 0.4 mm: a morphological opening finds thinner regions, and
+  sub-nozzle glyph parts (commas, `/`, the `@`) are thickened just enough to print.
+- Inlay depth, half thickness and pocket depth are whole 0.20 mm layers.
+- Text never enters the QR quiet zone, the strap-hole ring keep-out, or the last 1 mm of the
+  edge. Lines too wide for their column shrink to a 3.6 mm minimum, then fail.
+- Every STL is watertight; output is byte-for-byte deterministic.
 
-### Material Presets
-Use `--preset {pla,petg,abs}` for tuned clearances and edges. CLI overrides still take precedence.
+## Print and assemble
 
-## Color-Change Layer
-To switch colours on a single-extruder printer, change filament at layer index:
-```
-layer = round(island_h / layer_height)
-```
-Examples for `island_h = 0.5 mm`:
-- `layer_height = 0.16 mm` → layer `3`
-- `layer_height = 0.20 mm` → layer `2`
-- `layer_height = 0.28 mm` → layer `2`
+See the generated `PRINTING.md`. In short: load each half's base and inlay STLs together as
+one object with two parts, base on filament 1 (light), inlay on filament 2 (dark), face-down
+as loaded, 0.20 mm layers. Write the NFC sticker, place it in the back half's pocket, glue the
+halves with the pins engaged.
 
-## Assembly
-- Press-fit the Ø 25 mm NFC tag into the rear recess
-- Apply the 30×50 mm QR sticker into the front pocket
-- Attach a strap through the hole or slot
-
-## Tolerances
-Default clearance is 0.25 mm for the QR sticker and NFC tag. If parts are too tight, increase `fit_clearance` to 0.30–0.40 mm; if loose, reduce to 0.15–0.20 mm.
-
-## Troubleshooting
-- If generation fails, ensure `nfc_depth + qr_pocket_depth <= body_t - 0.6` and that required Python packages are installed.
-- PNG previews are optional. CI uses SVG by default; PNG requires the system Cairo library. Use `--previews svg` to avoid PNG entirely.
-
-## Artifacts and Determinism
-- `manifest.json` lists parameters, QR metadata, file SHA256, and color-switch layer (when provided).
-- `checksums.sha256` contains `sha256  filename` lines for all outputs.
-- CI performs two identical deterministic builds and fails if any hash differs.
-
-## License
-This project is licensed under the MIT License. See [LICENSE](../LICENSE).
-
-## Previews
-![Front preview](outputs/preview_front.png)
-![Back preview](outputs/preview_back.png)
-## Dual-Side Text & Prompt
-- Front prompt (QR side):
-```
-python 3d-models/generate_tag.py \
-  --out 3d-models/outputs/ \
-  --previews svg --deterministic \
-  --front_prompt_text "Scan me to find my owner" \
-  --front_text_style emboss --front_text_height 0.5
-```
-- Back owner text (example content — do not commit PII):
-```
-python 3d-models/generate_tag.py \
-  --out 3d-models/outputs/ \
-  --previews svg --deterministic \
-  --back_name "Ori Ashkenazi" \
-  --back_phone "+972-XX-XXXXXXX" \
-  --back_address "Bnei Brak 17 apt. 3 Tel Aviv Israel" \
-  --back_text_style engrave --back_text_h 4.0 --back_line_gap 1.2 --back_margin 3.0
-```
-- Warning: never commit real PII. Keep owner fields in local files or env; `registry.jsonl` is git-ignored.
+**Pin fit:** pins Ø2.0 × 0.6 mm, holes Ø2.3 × 0.7 mm (0.3 mm on diameter, a snug slip fit on
+a P1S). Adjust `Build.pin_clearance` if they bind or rattle.
