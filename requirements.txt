@@ -1,14 +1,16 @@
+# 3D tag generator
 cadquery==2.5.2
 trimesh==4.7.4
-numpy-stl==3.2.0
-PyYAML==6.0.2
-cairosvg==2.8.2
-hypothesis==6.138.3
-psutil==7.0.0
-Pillow==11.3.0
-segno==1.6.1
 numpy==2.3.2
-beautifulsoup4==4.12.3
+shapely==2.1.1
+fonttools==4.59.1
+segno==1.6.1
+PyYAML==6.0.2
+rtree==1.4.1
+# Privacy gate app
 fastapi==0.115.5
-httpx==0.27.2
 jinja2==3.1.4
+httpx==0.27.2
+# Tests
+pytest==8.4.1
+beautifulsoup4==4.12.3

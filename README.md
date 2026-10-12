@@ -8,7 +8,7 @@ Note: The website lives in `/docs/` (GitHub Pages). There is no `/website/` fold
 
 Components:
 - Contact Page (`/docs/`): Mobile-first static site for finders to reach the owner.
-- 3D Models (`/3d-models/`): Parametric tag generator (CadQuery) with QR islands, dual-side text, and deterministic artifacts.
+- 3D Models (`/3d-models/`): Two-part, two-colour tag generator (CadQuery): QR + prompt front, contact back, NFC sealed inside.
 - Privacy Gate App (`/app/`): Minimal FastAPI endpoint used for token-gated owner info (optional).
 - Tools (`/tools/`): Utilities such as the missing-toggle CLI and a WCAG contrast checker.
 - Tests (`/tests/`): Geometry, CLI, docs, privacy, and contrast/layout checks.
@@ -19,14 +19,14 @@ Website (local):
 ```bash
 cd docs
 python -m http.server 8000
-# open http://localhost:8000/docs/index.html
+# open http://localhost:8000/
 ```
 
-3D models (deterministic, SVG previews):
+Two-part tag (Bambu Lab P1S + AMS) — see [3d-models/README.md](3d-models/README.md):
 ```bash
 pip install -r requirements.txt
-python 3d-models/generate_tag.py --out 3d-models/outputs/ \
-  --previews svg --deterministic --preset petg --qr_text "https://example.com/RECOVER?u=DEMO"
+cp 3d-models/contact.example.yaml 3d-models/contact.local.yaml   # edit; git-ignored
+python 3d-models/two_part_tag.py
 ```
 
 Privacy app (optional):
@@ -39,7 +39,7 @@ uvicorn app.main:app --reload
 
 ```
 docs/                   # Website (GitHub Pages)
-3d-models/              # Generator, params, README
+3d-models/              # Tag generator, layout, viewer, README
 app/                    # FastAPI privacy gate
 tools/                  # Utilities (toggle missing, contrast)
 tests/                  # Pytest suite
@@ -54,10 +54,6 @@ requirements.txt
 - Tokens: Verified using HMAC‑SHA256 with `RECOVERY_SECRET` (set via environment). Legacy plain SHA‑256 tokens are rejected by default; set `ALLOW_LEGACY_SHA256=true` temporarily if migrating.
 - Data storage: `registry.jsonl` (git‑ignored) holds rows with `uid`, `token_hash`, `missing`, and optional owner fields. Never commit PII.
 - Local testing: `uvicorn app.main:app --reload` (ensure `RECOVERY_SECRET` is exported).
-
-## Font Determinism
-
-- The 3D generator accepts `--front_font_path` and `--back_font_path`. Use a pinned font file for deterministic text geometry across machines. The manifest records font SHA256 when a file path is provided.
 
 ## License
 

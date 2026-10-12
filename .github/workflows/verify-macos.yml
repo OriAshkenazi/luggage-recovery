@@ -51,85 +51,36 @@ jobs:
           python-version: '3.11'
       - name: Install Python deps
         run: pip install -r requirements.txt
+      - name: Install Assistant font (tag text)
+        run: |
+          mkdir -p ~/Library/Fonts
+          curl -fsSL -o ~/Library/Fonts/Assistant-VariableFont_wght.ttf \
+            "https://github.com/google/fonts/raw/main/ofl/assistant/Assistant%5Bwght%5D.ttf"
       - name: Contrast check tokens
         run: python tools/contrast_check.py tokens/buttons.json
-      - name: Layout and contrast tests
-        run: pytest -q -k "contrast or layout"
-      - name: Run privacy/text tests subset
+      - name: Tests
         env:
           RECOVERY_SECRET: CI_SECRET
-        run: pytest -q -k "privacy or text_geom or determinism or contrast or layout"
-      - name: Generate default outputs (A) deterministic, svg, QR, CI strict with text
+        run: pytest -q
+      - name: Generate the two-part tag twice (placeholder contact)
         run: |
-          python 3d-models/generate_tag.py \
-            --out 3d-models/outputs/a \
-            --previews svg \
-            --deterministic \
-            --ci \
-            --preset petg \
-            --qr_text "https://example.com/RECOVER?u=DEMO" \
-            --front_prompt_text "Scan me to find my owner" \
-            --back_name "REDACTED" --back_phone "REDACTED" --back_address "REDACTED" \
-            --layer_height 0.20
-      - name: Generate default outputs (B) deterministic repeat
-        run: |
-          python 3d-models/generate_tag.py \
-            --out 3d-models/outputs/b \
-            --previews svg \
-            --deterministic \
-            --ci \
-            --preset petg \
-            --qr_text "https://example.com/RECOVER?u=DEMO" \
-            --front_prompt_text "Scan me to find my owner" \
-            --back_name "REDACTED" --back_phone "REDACTED" --back_address "REDACTED" \
-            --layer_height 0.20
+          python 3d-models/two_part_tag.py --contact /dev/null --out 3d-models/outputs/a
+          python 3d-models/two_part_tag.py --contact /dev/null --out 3d-models/outputs/b
       - name: Compare checksums for determinism
         run: |
           python - << 'PY'
           import json, sys, pathlib
-          a = pathlib.Path('3d-models/outputs/a/manifest.json')
-          b = pathlib.Path('3d-models/outputs/b/manifest.json')
-          ma = json.loads(a.read_text())['files']
-          mb = json.loads(b.read_text())['files']
-          keys = sorted(set(ma.keys()) & set(mb.keys()))
-          diffs = [k for k in keys if ma[k]['sha256'] != mb[k]['sha256']]
+          a = json.loads(pathlib.Path('3d-models/outputs/a/manifest.json').read_text())['files']
+          b = json.loads(pathlib.Path('3d-models/outputs/b/manifest.json').read_text())['files']
+          diffs = [k for k in a if a[k] != b.get(k)]
           if diffs:
             print('Non-deterministic outputs for:', ', '.join(diffs))
             sys.exit(1)
-          print('Determinism check passed for', len(keys), 'files')
+          print('Determinism check passed for', len(a), 'files')
           PY
       - name: Upload outputs artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-outputs-3.11
-          path: 3d-models/outputs/
+          name: two-part-tag-macos-3.11
+          path: 3d-models/outputs/a/
           retention-days: 10
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v1.')
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install Python deps
-        run: pip install -r requirements.txt
-      - name: Generate default outputs (deterministic, svg, QR)
-        run: |
-          python 3d-models/generate_tag.py \
-            --out 3d-models/outputs/ \
-            --previews svg \
-            --deterministic \
-            --preset petg \
-            --qr_text "https://example.com/RECOVER?u=DEMO" \
-            --layer_height 0.20
-      - name: Attach artifacts to release
-        uses: softprops/action-gh-release@v2
-        with:
-          body_path: CHANGELOG.md
-          files: |
-            3d-models/outputs/*
-            3d-models/outputs/**
