@@ -86,6 +86,10 @@ a { color: var(--color-ink); }
 }
 .muted { margin: 0; color: var(--color-muted); }
 
+/* Even line lengths for headings, no stranded last words in paragraphs */
+h1, h2, .hero__lead { text-wrap: balance; }
+p { text-wrap: pretty; }
+
 /* Hebrew: no tracking or caps, slightly looser line height */
 :lang(he) .eyebrow,
 :lang(he) .top-bar__brand,
@@ -221,7 +225,7 @@ a { color: var(--color-ink); }
 .contact__primary .contact__title { font-size: 20px; }
 .contact__sub { font-size: 15px; font-weight: 600; color: var(--color-muted); }
 .contact__sub--on-ink { color: var(--color-on-ink); }
-.contact__sub--wrap { overflow-wrap: anywhere; }
+.contact__sub--wrap { overflow-wrap: break-word; } /* prefers the <wbr> after "@" */
 [dir="rtl"] .contact__sub[dir="ltr"] { text-align: right; }
 
 /* ---------------------------------------------------------------- message + thanks */

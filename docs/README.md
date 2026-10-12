@@ -46,6 +46,8 @@ in the `action` URL.
 
 ## Languages
 
+Translations mirror the English element by element: same meaning, nothing added or dropped. Hebrew is gender-neutral: neutral spellings (מצאת, אליך), infinitives and nouns, never imperatives (השאר / השאירי).
+
 English is always shown first; nothing is remembered between visits. Hebrew switches the page to
 `dir="rtl"`, mirrors directional icons and drops letter-spacing and capitals. Add a language by
 adding `i18n/<code>.json` with the same keys and a button in `.lang-switch`; add `<code>` to

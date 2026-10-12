@@ -20,6 +20,19 @@ def _lookup(data, key):
     return data
 
 
+def _keys(d, prefix=""):
+    out = set()
+    for k, v in d.items():
+        out |= _keys(v, prefix + k + ".") if isinstance(v, dict) else {prefix + k}
+    return out
+
+
+def test_languages_have_identical_keys():
+    en = json.loads((DOCS / "i18n" / "en.json").read_text(encoding="utf-8"))
+    he = json.loads((DOCS / "i18n" / "he.json").read_text(encoding="utf-8"))
+    assert _keys(en) == _keys(he)
+
+
 def test_every_i18n_key_exists_in_both_languages():
     doc = _html()
     keys = set()
@@ -97,3 +110,18 @@ def test_light_only():
     for path in DOCS.rglob("*"):
         if path.suffix in {".css", ".js", ".html"}:
             assert "prefers-color-scheme" not in path.read_text(encoding="utf-8"), path
+
+
+def test_static_english_html_strings_match_en_json():
+    en = json.loads((DOCS / "i18n" / "en.json").read_text(encoding="utf-8"))
+    for el in _html().select("[data-i18n-html]"):
+        rendered = el.decode_contents().replace("<br/>", "<br>")
+        assert rendered == _lookup(en, el["data-i18n-html"]), el["data-i18n-html"]
+
+
+def test_hebrew_avoids_gendered_imperatives():
+    """Hebrew copy stays gender-neutral. Past-tense 2nd person (מצאת, סרקת) is spelled the same
+    for everyone; imperatives are not (השאר / השאירי), so use infinitives or nouns instead."""
+    text = (DOCS / "i18n" / "he.json").read_text(encoding="utf-8")
+    for word in ("השאר ", "שלח ", "התקשר", "צור קשר", "לחץ", "כתוב", "ספר "):
+        assert word not in text, word

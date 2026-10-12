@@ -6,14 +6,11 @@
   "lang": {
     "label": "Language"
   },
-  "owner": {
-    "name": "Ori Ashkenazi"
-  },
   "hero": {
     "eyebrow": "You scanned my tag",
     "title": "Found my<br>luggage?",
-    "lead": "Thank you for being honest. Reaching me takes one tap.",
-    "owner": "This bag belongs to"
+    "lead": "Thank you for being honest.<br>Reaching me takes one tap.",
+    "owner": "This bag belongs to <strong>Ori Ashkenazi</strong>."
   },
   "contact": {
     "title": "Contact me",
@@ -45,7 +42,7 @@
   },
   "thanks": {
     "title": "Thank you",
-    "message": "Losing a bag is stressful. People who take a minute to return one make travel better for everyone."
+    "message": "Losing a bag is stressful. People who take a minute to return one make travel better for everyone."
   },
   "footer": {
     "system": "Lost Luggage Recovery",

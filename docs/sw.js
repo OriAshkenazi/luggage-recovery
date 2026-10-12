@@ -1,10 +1,11 @@
 /**
  * Offline support for the recovery page. Paths are relative to this file, so it
  * works under the GitHub Pages project path (/luggage-recovery/).
- * Same-origin GETs: served from cache, refreshed in the background.
+ * The page and translations: network first, cache when offline (so copy edits show at once).
+ * Other same-origin GETs (CSS, JS, font, icon): cache first, refreshed in the background.
  * Everything else (WhatsApp, Formspree, tel:, mailto:) goes straight to the network.
  */
-const CACHE = 'luggage-recovery-v2';
+const CACHE = 'luggage-recovery-v3';
 const PRECACHE = [
     './',
     'index.html',
@@ -34,16 +35,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+    const url = new URL(request.url);
+    const fresh = request.mode === 'navigate' || url.pathname.endsWith('.json');
     event.respondWith(
         caches.open(CACHE).then(async (cache) => {
+            const network = fetch(request).then((response) => {
+                if (response.ok) cache.put(request, response.clone());
+                return response;
+            });
+            if (fresh) {
+                return network.catch(async () => (await cache.match(request)) || cache.match('index.html'));
+            }
             const cached = await cache.match(request);
-            const network = fetch(request)
-                .then((response) => {
-                    if (response.ok) cache.put(request, response.clone());
-                    return response;
-                })
-                .catch(() => cached);
-            return cached || network;
+            if (cached) {
+                network.catch(() => {}); // background refresh; offline is fine
+                return cached;
+            }
+            return network;
         })
     );
 });
