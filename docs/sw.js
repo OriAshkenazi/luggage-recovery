@@ -5,7 +5,7 @@
  * Other same-origin GETs (CSS, JS, font, icon): cache first, refreshed in the background.
  * Everything else (WhatsApp, Formspree, tel:, mailto:) goes straight to the network.
  */
-const CACHE = 'luggage-recovery-v3';
+const CACHE = 'luggage-recovery-v4';
 const PRECACHE = [
     './',
     'index.html',
@@ -20,7 +20,10 @@ const PRECACHE = [
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+        // cache: 'reload' skips the browser's HTTP cache (GitHub Pages sends max-age=600)
+        caches.open(CACHE)
+            .then((cache) => cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' }))))
+            .then(() => self.skipWaiting())
     );
 });
 
@@ -39,7 +42,8 @@ self.addEventListener('fetch', (event) => {
     const fresh = request.mode === 'navigate' || url.pathname.endsWith('.json');
     event.respondWith(
         caches.open(CACHE).then(async (cache) => {
-            const network = fetch(request).then((response) => {
+            // Fresh resources revalidate with the server every time (a 304 when unchanged)
+            const network = (fresh ? fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(request)).then((response) => {
                 if (response.ok) cache.put(request, response.clone());
                 return response;
             });
