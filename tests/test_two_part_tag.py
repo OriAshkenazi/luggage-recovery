@@ -186,3 +186,21 @@ def test_manifest_has_no_contact_text(exported):
     text = (out / "manifest.json").read_text()
     for value in (CONTACT.name, CONTACT.phone, CONTACT.email):
         assert value not in text
+
+
+def test_bambu_slice_check():
+    import bambu_project as bp
+
+    ok = "\n".join([
+        # As in real P1S output: the start G-code loads the first filament without an M620/T pair
+        "; CHANGE_LAYER", "G1 X1 Y1 E0.5", "M620 S0A", "T0", "G1 X2 Y2 E0.5",
+        "; CHANGE_LAYER", "G1 X1 Y1 E0.5", "M620 S1A", "T1", "G1 X2 Y2 E0.5",
+        "; CHANGE_LAYER", "G1 X1 Y1 E0.5", "M620 S0A", "T0", "G1 X2 Y2 E0.5",
+        "; CHANGE_LAYER", "G1 X1 Y1 E0.5",
+        "; total estimated time: 31m 2s",
+    ])
+    r = bp._check_slice(ok)
+    assert r["dark_layers"] == [1, 2, 3] and r["swaps"] == 3 and r["layers"] == 4
+    late = ok.replace("; CHANGE_LAYER\nG1 X1 Y1 E0.5\n; total", "; CHANGE_LAYER\nM620 S1A\nT1\nG1 X1 Y1 E0.5\n; total")
+    with pytest.raises(SystemExit, match="Unexpected slice"):
+        bp._check_slice(late)  # dark filament on layer 4: the inlay would show through the base

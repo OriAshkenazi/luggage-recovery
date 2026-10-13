@@ -55,6 +55,22 @@ Assembled view (flip, explode with the NFC sticker shown) and both print plates.
   edge. Lines too wide for their column shrink to a 3.6 mm minimum, then fail.
 - Every STL is watertight; output is byte-for-byte deterministic.
 
+## Bambu Studio projects
+
+With Bambu Studio installed, turn the STLs into print-ready, sliced projects:
+
+```bash
+python 3d-models/bambu_project.py                            # Bambu PLA Basic, Textured PEI plate
+python 3d-models/bambu_project.py --filament "Bambu PETG HF"
+```
+
+This writes `front_half.3mf` and `back_half.3mf` next to the STLs. Each has the base on filament 1
+(light) and the inlay on filament 2 (dark), the P1S 0.4 mm profile at 0.20 mm layers, and the
+first-layer settings below. The script checks each slice: the dark filament prints on the three
+inlay layers only (3 colour swaps per half, about 30 minutes each). Open, put the light
+filament in AMS slot 1 and the dark in slot 2, print. On Apple silicon it runs the native arm64
+slicer.
+
 ## Print and assemble
 
 See the generated `PRINTING.md`. In short: load each half's base and inlay STLs together as
