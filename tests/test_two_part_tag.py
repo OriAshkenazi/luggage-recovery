@@ -12,7 +12,7 @@ from shapely.geometry import LineString, box
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "3d-models"))
 import layout as L  # noqa: E402
 import two_part_tag as tp  # noqa: E402
-from glyphs import Font, line_width, text_line  # noqa: E402
+from glyphs import Font, line_width, polygons, text_line  # noqa: E402
 
 CONTACT = tp.Contact()  # placeholders only: no personal data in tests
 
@@ -204,3 +204,17 @@ def test_bambu_slice_check():
     late = ok.replace("; CHANGE_LAYER\nG1 X1 Y1 E0.5\n; total", "; CHANGE_LAYER\nM620 S1A\nT1\nG1 X1 Y1 E0.5\n; total")
     with pytest.raises(SystemExit, match="Unexpected slice"):
         bp._check_slice(late)  # dark filament on layer 4: the inlay would show through the base
+
+
+def test_every_glyph_is_one_solid_piece():
+    """TrueType non-zero fill: overlapping or self-crossing contours (the variable font's '4')
+    must not split a letter into separate pieces."""
+    two_piece = set("ij?!")
+    counters = {"4": 1, "8": 2, "B": 2, "@": 1, "O": 1, "A": 1}
+    for weight in (700, 800):
+        f = Font.load(None, weight)
+        for ch in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@.,-+/?!":
+            parts = polygons(text_line(ch, f, 6.0, 0, 0, 1.0))
+            assert len(parts) == (2 if ch in two_piece else 1), (weight, ch, len(parts))
+            if ch in counters:
+                assert sum(len(p.interiors) for p in parts) == counters[ch], (weight, ch)

@@ -4,8 +4,8 @@
 Runs Bambu Studio's command line on the STLs from ``two_part_tag.py`` and writes
 ``front_half.3mf`` and ``back_half.3mf`` next to them. Each project already has the base on
 filament 1 and the inlay on filament 2, the P1S 0.4 mm nozzle at 0.20 mm layers, and the
-first-layer settings flush inlays need (elephant-foot compensation 0, 0.42 mm first-layer
-lines). Each is sliced, so it can be sent to the printer as is, and the slice is checked:
+first-layer settings flush inlays need (Arachne walls, elephant-foot compensation 0, 0.42 mm
+first-layer lines). Each is sliced, so it can be sent to the printer as is, and the slice is checked:
 the dark filament may only print on the inlay layers.
 
     python 3d-models/bambu_project.py [--filament "Bambu PLA Basic"] [--out DIR]
@@ -98,7 +98,10 @@ def build(out: Path, filament: str, inlay_filament: Optional[str] = None, plate:
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         process = _flatten("process", PROCESS)
-        process.update({"elefant_foot_compensation": "0", "initial_layer_line_width": "0.42",
+        # Arachne varies line width so small letters fill as one stroke; Classic's fixed 0.42 mm
+        # paths leave slivers in acute corners (the M's notches) and seams at joins (the 4).
+        process.update({"wall_generator": "arachne",
+                        "elefant_foot_compensation": "0", "initial_layer_line_width": "0.42",
                         "filament_map": ["1", "1"], "filament_map_mode": "Manual", "curr_bed_type": plate})
         files = {"machine.json": _flatten("machine", PRINTER), "process.json": process}
         for fname, name, colour in (("base.json", filament, BASE_COLOUR), ("inlay.json", inlay_filament or filament, INLAY_COLOUR)):
