@@ -202,6 +202,9 @@ For each half (front, then back):
 5. Layer height {layer} mm, first layer {layer} mm. The inlay is the first {inlay_layers} layers,
    so colour swaps only happen there; the other layers of the {half_layers} are base colour.
 6. Smooth PEI plate: glossy face. Textured PEI: matte, textured face.
+7. Process > Quality: set **Elephant foot compensation = 0** and **Initial layer line width = 0.42**.
+   The visible face is the first layer; the default 0.15 mm compensation shrinks every inlay
+   stroke and the 0.5 mm first-layer width skips the thinnest ones (about 10% of the artwork).
 
 Assembly:
 1. Write the NFC sticker first (e.g. NFC Tools, URL record: {url}).

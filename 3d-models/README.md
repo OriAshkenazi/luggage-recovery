@@ -59,7 +59,8 @@ Assembled view (flip, explode with the NFC sticker shown) and both print plates.
 
 See the generated `PRINTING.md`. In short: load each half's base and inlay STLs together as
 one object with two parts, base on filament 1 (light), inlay on filament 2 (dark), face-down
-as loaded, 0.20 mm layers. Write the NFC sticker, place it in the back half's pocket, glue the
+as loaded, 0.20 mm layers. Set elephant foot compensation to 0 and the initial layer line width to
+0.42 mm: the first layer is the visible face, and the defaults thin or drop inlay strokes. Write the NFC sticker, place it in the back half's pocket, glue the
 halves with the pins engaged.
 
 **Pin fit:** pins Ø2.0 × 0.6 mm, holes Ø2.3 × 0.7 mm (0.3 mm on diameter, a snug slip fit on
