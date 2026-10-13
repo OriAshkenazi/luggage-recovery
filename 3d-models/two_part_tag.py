@@ -109,6 +109,9 @@ def build(contact: Contact, b: Build = Build(), lay: Optional[L.TagLayout] = Non
     problems = L.check_straight_features(lay)
     if problems:
         raise ValueError("Not a multiple of the 0.4 mm nozzle: " + ", ".join(problems))
+    problems = L.check_text_strokes(lay, contact.font_path)
+    if problems:
+        raise ValueError("Text strokes are not whole nozzle lines: " + ", ".join(problems))
     for v, label in ((b.inlay_depth, "inlay_depth"), (b.half_t, "half_t"), (b.nfc_pocket_depth, "nfc_pocket_depth")):
         if abs(v / b.layer_h - round(v / b.layer_h)) > 1e-6:
             raise ValueError(f"{label} {v} mm is not a whole number of {b.layer_h} mm layers")

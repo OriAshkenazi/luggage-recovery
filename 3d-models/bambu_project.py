@@ -121,7 +121,7 @@ def build(out: Path, filament: str, inlay_filament: Optional[str] = None, plate:
                 "--export-3mf", f"{half}_half.3mf", "--outputdir", str(work),
                 str(out / f"{half}_base.stl"), str(out / f"{half}_inlay.stl"),
             ]
-            proc = subprocess.run(cmd, capture_output=True, text=True)
+            proc = subprocess.run(cmd, capture_output=True, text=True, cwd=work)  # it drops result.json in the cwd
             project = work / f"{half}_half.3mf"
             if proc.returncode != 0 or not project.exists():
                 raise SystemExit(f"Bambu Studio failed on the {half} half (exit {proc.returncode}):\n{proc.stdout[-1500:]}{proc.stderr[-1500:]}")

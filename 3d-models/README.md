@@ -1,13 +1,14 @@
 # Two-part luggage tag
 
-An 85 × 54 × 3.2 mm tag printed as two halves on a Bambu Lab P1S with AMS, each half
+A 112 × 68 × 3.2 mm tag printed as two halves on a Bambu Lab P1S with AMS, each half
 two-colour: a light base with a flush dark inlay in its first three layers. The halves
 glue back-to-back with an NFC sticker sealed between them.
 
-- **Front:** QR code (33 modules × 1.2 mm) to the recovery page, "Found my luggage?" prompt.
+- **Front:** QR code (33 modules × 1.6 mm, 52.8 mm) to the recovery page, "Found my luggage?" prompt.
 - **Back:** contact details, readable when the tag is turned over.
 - **Inside:** Ø20 mm NFC pocket behind the QR, three Ø2 mm alignment pins.
-- **Strap hole:** Ø6 mm, 9 mm in from the top and side edges, with a printed ring.
+- **Strap hole:** Ø6 mm, centre 12.4 mm in from the top and side edges, with a printed ring.
+- **Margins:** 7.6 mm on every face: the QR's visible edge, the ring and the text all sit on it.
 
 ## Layout first
 
@@ -52,7 +53,10 @@ Assembled view (flip, explode with the NFC sticker shown) and both print plates.
   sub-nozzle glyph parts (commas, `/`, the `@`) are thickened just enough to print.
 - Inlay depth, half thickness and pocket depth are whole 0.20 mm layers.
 - Text never enters the QR quiet zone, the strap-hole ring keep-out, or the last 1 mm of the
-  edge. Lines too wide for their column shrink to a 3.6 mm minimum, then fail.
+  edge.
+- Text comes only in 5.0, 7.4 and 10 mm (Assistant ExtraBold): at those sizes every stroke
+  (stems, bars, bowls) splits into 2, 3 or 4 nozzle lines of 0.36–0.48 mm, so it prints solid
+  and sharp. Any other size fails the build; a line too wide for its column steps down a size.
 - Every STL is watertight; output is byte-for-byte deterministic.
 
 ## Bambu Studio projects

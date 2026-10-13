@@ -47,6 +47,19 @@ def test_straight_features_are_nozzle_multiples():
     assert L.check_straight_features(lay) == ["ring width 0.6 mm"]
 
 
+def test_text_strokes_are_whole_nozzle_lines():
+    lay = _layout()
+    assert L.check_text_strokes(lay) == []
+    f = Font.load(None, 800)
+    for size in L.TEXT_TIERS:
+        beads, lo, hi = L.stroke_beads(f, size)
+        assert L.BEAD_MIN <= lo <= hi <= L.BEAD_MAX
+    assert L.stroke_beads(f, 3.6) is None and L.stroke_beads(f, 6.0) is None  # fractional lines
+    lay.back.column.items[1].items[1].size = 6.0
+    with pytest.raises(ValueError, match="whole nozzle lines"):
+        tp.build(CONTACT, lay=lay)
+
+
 def test_thin_region_detection():
     line = LineString([(0, 0), (10, 0)])
     assert L.thin_regions(line.buffer(0.15, cap_style="flat"))  # 0.3 mm wide: flagged
@@ -60,10 +73,12 @@ def test_faces_have_no_sub_nozzle_strokes():
         assert L.thin_regions(L.build_face(lay, face, CONTACT.qr_url, None).inlay) == []
 
 
-def test_long_text_shrinks_then_fails():
+def test_long_text_steps_down_whole_tiers_then_fails():
     lay = L.default_layout("A VERY LONG NAME FOR A TAG", CONTACT.phone, CONTACT.email, CONTACT.qr_url)
     name = next(t for t in L.build_face(lay, lay.back, CONTACT.qr_url, None).text if t["text"].startswith("A VERY"))
-    assert name["size_mm"] < 7.6 and name["width_mm"] <= 77.0 + 1e-6
+    # Never an arbitrary size: the next smaller size whose strokes are whole nozzle lines
+    assert name["size_mm"] in L.TEXT_TIERS and name["size_mm"] < 10.0
+    assert name["width_mm"] <= lay.back.column.width + 1e-6
     lay = L.default_layout("AN ABSURDLY LONG OWNER NAME THAT CANNOT FIT", CONTACT.phone, CONTACT.email, CONTACT.qr_url)
     with pytest.raises(ValueError, match="minimum"):
         L.build_face(lay, lay.back, CONTACT.qr_url, None)
@@ -71,7 +86,7 @@ def test_long_text_shrinks_then_fails():
 
 def test_text_stays_out_of_qr_quiet_zone_and_hole():
     lay = _layout()
-    lay.front.column.width = 40.0  # would reach into the quiet zone
+    lay.front.column.width = 80.0  # wide enough that the line stays at 7.4 mm and runs into the quiet zone
     lay.front.column.items[0].items[0].text = "FOUND MY LUGGAGE"
     with pytest.raises(ValueError):
         L.build_face(lay, lay.front, CONTACT.qr_url, None)
@@ -97,7 +112,8 @@ def test_print_orientation(exported):
         # Inlay is the first layers on the plate; the base shares the same footprint
         assert abs(inlay.bounds[0][2]) < 1e-3 and abs(inlay.bounds[1][2] - b.inlay_depth) < 1e-3
         assert abs(base.bounds[0][2]) < 1e-3
-        assert np.allclose(base.bounds[:, :2], [[-42.5, -27.0], [42.5, 27.0]], atol=0.01)
+        w, h = _layout().width / 2, _layout().height / 2
+        assert np.allclose(base.bounds[:, :2], [[-w, -h], [w, h]], atol=0.01)
     assert abs(trimesh.load_mesh(out / "front_base.stl").bounds[1][2] - (b.half_t + b.pin_h)) < 0.02  # pins
     assert abs(trimesh.load_mesh(out / "back_base.stl").bounds[1][2] - b.half_t) < 1e-3
 

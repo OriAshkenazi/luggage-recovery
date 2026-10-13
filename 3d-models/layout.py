@@ -21,6 +21,12 @@ from shapely.ops import unary_union
 from glyphs import Font, line_width, polygons, text_line
 
 NOZZLE = 0.4  # fixed: the P1S nozzle. Straight features are whole multiples; no stroke is thinner.
+# Bead widths Arachne prints cleanly with a 0.4 mm nozzle. A text stroke is "round" when it
+# splits into a whole number of beads inside this range.
+BEAD_MIN, BEAD_MAX = 0.36, 0.48
+# Assistant ExtraBold sizes whose every stroke (stems, bars, bowls) is 2, 3 or 4 beads.
+TEXT_TIERS = (5.0, 7.4, 10.0)
+MARGIN = 7.6  # every face: the QR's visible margin, the hole ring's edge, the text's left edge
 
 
 # ---------------------------------------------------------------- layout primitives (CSS-like)
@@ -34,7 +40,7 @@ class Text:
     line_height: float = 1.0
     tracking: float = 0.0  # CSS letter-spacing, em
     uppercase: bool = True
-    min_size: float = 3.6  # auto-shrink floor when the line is wider than its column
+    min_size: float = TEXT_TIERS[0]  # a line too wide for its column steps down tiers to this
 
 
 @dataclass
@@ -88,14 +94,14 @@ class Face:
 
 @dataclass
 class TagLayout:
-    width: float = 85.0
-    height: float = 54.0
+    width: float = 112.0
+    height: float = 68.0
     corner_r: float = 4.0
     hole_d: float = 6.0
-    hole_inset: float = 9.0  # hole centre from the top and side edge
+    hole_inset: float = 12.4  # hole centre from the top and side edge: the ring sits on the margin
     ring_outer_d: float = 9.6
     ring_width: float = 0.8
-    qr_module: float = 1.2
+    qr_module: float = 1.6  # 4 nozzle lines
     qr_quiet: int = 4
     qr_error: str = "m"
     front: Face = None  # type: ignore[assignment]
@@ -103,35 +109,78 @@ class TagLayout:
 
 
 def default_layout(name: str, phone: str, email: str, url: str) -> TagLayout:
-    """The approved plan ("Luggage Tag Layout" canvas), in millimetres."""
+    """The approved plan ("Luggage Tag Layout" canvas), in millimetres.
+
+    Every line sits on a TEXT_TIERS size, so each stroke is a whole number of nozzle lines.
+    """
     lay = TagLayout()
     i = lay.hole_inset
+    m = MARGIN
+    # QR v4 (33 modules) x 1.6 mm = 52.8 mm, with its 4-module quiet zone inside the tag;
+    # its visible edge sets the margin used everywhere else.
+    qr = 33 * lay.qr_module
+    qx, qy = lay.width - m - qr, m
     lay.front = Face(
         ring_center=(i, i),
-        qr_origin=(37.6, 7.2),
-        column=Box(x=3.0, top=16.2, width=29.0, height=30.6, items=[
-            Column([Text("Found my", 5.8, 800, 0.95, 0.01), Text("luggage?", 5.8, 800, 0.95, 0.01)]),
-            Column(gap=1.4, items=[
-                Rule(8.4, 0.8),
-                Row(gap=1.2, items=[Text("Scan or tap", 3.8, 800, 1.0, 0.0), Arrow()]),
-                Column([Text("to reach", 3.6, 800, 1.0, 0.05), Text("the owner", 3.6, 800, 1.0, 0.05)]),
+        qr_origin=(qx, qy),
+        # From under the ring to the QR's bottom edge, three groups spaced evenly
+        column=Box(x=m, top=19.6, width=qx - lay.qr_quiet * lay.qr_module - m, height=qy + qr - 19.6, items=[
+            Column([Text("Found my", 7.4, 800, 0.95, 0.01), Text("luggage?", 7.4, 800, 0.95, 0.01)]),
+            Column(gap=1.6, items=[
+                Rule(10.4, 0.8),
+                Row(gap=1.6, items=[Text("Scan or tap", 5.0, 800, 1.0, 0.0), Arrow(6.8, 3.6, 0.8)]),
             ]),
+            Column([Text("to reach", 5.0, 800, 1.0, 0.03), Text("the owner", 5.0, 800, 1.0, 0.03)]),
         ]),
     )
     lay.back = Face(
         ring_center=(lay.width - i, i),  # top-right once the tag is flipped left-right
-        column=Box(x=4.0, top=3.6, width=77.0, height=46.8, items=[
-            Column(gap=2.2, max_width=65.0, items=[Text("If found, please contact", 3.6, 800, 1.0, 0.12), Rule(8.4, 0.8)]),
-            Column(gap=1.8, items=[
-                Text(name, 7.6, 800, 0.95, 0.01),
-                Text(phone, 6.0, 700, 1.0, 0.03),
-                Text(email, 4.2, 700, 1.0, 0.03),
+        column=Box(x=m, top=m, width=lay.width - 2 * m, height=lay.height - 2 * m, items=[
+            Column(gap=2.4, max_width=80.0, items=[Text("If found, please contact", 5.0, 800, 1.0, 0.08), Rule(10.4, 0.8)]),
+            Column(gap=2.0, items=[
+                Text(name, 10.0, 800, 0.95, 0.01),
+                Text(phone, 7.4, 800, 1.0, 0.02),
+                Text(email, 5.0, 800, 1.0, 0.02),
             ]),
             # The GitHub Pages path is case-sensitive: keep the URL as typed.
-            Text(url.split("://", 1)[-1], 3.6, 800, 1.0, 0.01, uppercase=False),
+            Text(url.split("://", 1)[-1], 5.0, 800, 1.0, 0.0, uppercase=False),
         ]),
     )
     return lay
+
+
+def stroke_beads(font: Font, size: float) -> Optional[Tuple[int, float, float]]:
+    """(beads, narrowest bead, widest bead) when every main stroke of ``font`` at ``size`` splits
+    into the same whole number of beads within BEAD_MIN..BEAD_MAX; else None.
+
+    Strokes measured: the I stem, the H bar and the O bowl (thinnest to thickest in Assistant).
+    """
+    widths = [w * size for w in _stroke_ratios(font)]
+    for n in range(1, 8):
+        lo, hi = min(widths) / n, max(widths) / n
+        if BEAD_MIN - 1e-9 <= lo and hi <= BEAD_MAX + 1e-9:
+            return n, lo, hi
+    return None
+
+
+_RATIOS: Dict[int, Tuple[float, ...]] = {}
+
+
+def _stroke_ratios(font: Font) -> Tuple[float, ...]:
+    """Main stroke widths as a fraction of font size."""
+    if id(font) not in _RATIOS:
+        size = 10.0
+
+        def cut(ch: str, vertical: bool) -> float:
+            g = text_line(ch, font, size, 0, 0, 1.0)
+            x0, y0, x1, y1 = g.bounds
+            line = (LineString([((x0 + x1) / 2, y0 - 1), ((x0 + x1) / 2, y1 + 1)]) if vertical
+                    else LineString([(x0 - 1, (y0 + y1) / 2), (x1 + 1, (y0 + y1) / 2)]))
+            inter = g.intersection(line)
+            return min(part.length for part in getattr(inter, "geoms", [inter]) if part.length > 0)
+
+        _RATIOS[id(font)] = (cut("I", False) / size, cut("H", True) / size, cut("O", False) / size)
+    return _RATIOS[id(font)]
 
 
 # ---------------------------------------------------------------- flex layout -> geometry
@@ -158,10 +207,13 @@ class _Ctx:
         f = self.font(t.weight)
         w = line_width(s, f, size, t.tracking)
         if w > avail + 1e-6:
-            size = t.size * avail / w
-            if size < t.min_size - 1e-6:
-                raise ValueError(f"{s!r} is {w:.1f} mm wide at {t.size} mm; it needs {avail:.1f} mm, i.e. below the {t.min_size} mm minimum")
-            w = line_width(s, f, size, t.tracking)
+            # Step down to a smaller round-stroke size rather than an arbitrary one
+            smaller = [z for z in TEXT_TIERS if t.min_size - 1e-9 <= z < size]
+            for z in sorted(smaller, reverse=True):
+                if line_width(s, f, z, t.tracking) <= avail + 1e-6:
+                    return s, z, line_width(s, f, z, t.tracking)
+            raise ValueError(f"{s!r} is {w:.1f} mm wide at {t.size} mm and needs {avail:.1f} mm; "
+                             f"it does not fit at any text size down to the {t.min_size} mm minimum")
         return s, size, w
 
     def size(self, item: Item, avail: float) -> Tuple[float, float]:
@@ -316,6 +368,23 @@ def check_straight_features(lay: TagLayout) -> List[str]:
                 problems.append(f"rule thickness {it.height} mm")
             if isinstance(it, Arrow) and not mult(it.stroke):
                 problems.append(f"arrow stroke {it.stroke} mm")
+            if isinstance(it, (Row, Column)):
+                walk(it.items)
+
+    for face in (lay.front, lay.back):
+        walk(face.column.items)
+    return problems
+
+
+def check_text_strokes(lay: TagLayout, font_path: Optional[str] = None) -> List[str]:
+    """Every line of text must sit on a size whose strokes are whole nozzle lines."""
+    problems = []
+
+    def walk(items: Sequence[Item]):
+        for it in items:
+            if isinstance(it, Text):
+                if stroke_beads(Font.load(font_path, it.weight), it.size) is None:
+                    problems.append(f"{it.text!r} at {it.size} mm (weight {it.weight})")
             if isinstance(it, (Row, Column)):
                 walk(it.items)
 
