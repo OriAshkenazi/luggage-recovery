@@ -289,9 +289,19 @@ p { text-wrap: pretty; }
 }
 .field__input::placeholder { color: #6E6A61; opacity: 1; }
 .field__input:focus { border-color: var(--color-ink); }
-.field__input--area { padding-block: 12px; line-height: 1.4; resize: vertical; }
+.field__input--area { display: block; padding-block: 12px; line-height: 1.4; resize: vertical; }
+/* Drawn placeholder for the textarea: same box offsets (2 px border + padding), font and colour */
+.field__area { position: relative; }
+.field__placeholder {
+    position: absolute;
+    top: 14px;
+    inset-inline: 16px;
+    color: #6E6A61;
+    font: 600 17px/1.4 var(--font);
+    pointer-events: none;
+}
+.field__input:not(:placeholder-shown) + .field__placeholder { display: none; }
 .field__input[aria-invalid="true"] { border-color: var(--color-error); }
-.field__hint { margin: 0; font-size: 15px; line-height: 1.4; color: var(--color-muted); }
 .field__error { margin: 0; font-size: 15px; font-weight: 700; color: var(--color-error); }
 
 .button {
