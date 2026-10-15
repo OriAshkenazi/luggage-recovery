@@ -36,7 +36,7 @@
     "location": "Wo haben Sie es gefunden?",
     "location_placeholder": "Flughafen, Hotel, Straße…",
     "message": "Nachricht",
-    "message_placeholder": "Alles, was mir hilft, Sie zu finden",
+    "message_hint": "Alles, was mir hilft, Sie zu finden",
     "submit": "Nachricht senden",
     "required": "Pflichtfeld",
     "sent": "Danke! Ihre Nachricht wurde gesendet.",

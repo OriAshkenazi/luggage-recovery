@@ -52,18 +52,9 @@
             var value = t(el.getAttribute('data-i18n-html'));
             if (value !== null) el.innerHTML = value;
         });
-        // Safari keeps a field's placeholder laid out for the direction it loaded with, so after
-        // switching to Hebrew or Arabic the text ran past the field's edge. Give each field its own
-        // dir and re-set the placeholder afterwards so it is laid out again.
-        $$('.field__input').forEach(function (el) {
-            el.dir = root.dir;
-        });
         $$('[data-i18n-placeholder]').forEach(function (el) {
             var value = t(el.getAttribute('data-i18n-placeholder'));
-            if (value !== null) {
-                el.removeAttribute('placeholder');
-                el.setAttribute('placeholder', value);
-            }
+            if (value !== null) el.setAttribute('placeholder', value);
         });
         $$('[data-i18n-aria]').forEach(function (el) {
             var value = t(el.getAttribute('data-i18n-aria'));
@@ -129,15 +120,19 @@
 
     function setError(field, message) {
         var error = document.getElementById(field.id + '-error');
+        // Keep any hint the field was described by in the markup
+        if (!('hint' in field.dataset)) field.dataset.hint = field.getAttribute('aria-describedby') || '';
+        var hint = field.dataset.hint;
         field.setAttribute('aria-invalid', message ? 'true' : 'false');
         if (!error) return;
         if (message) {
             error.textContent = message;
             error.hidden = false;
-            field.setAttribute('aria-describedby', error.id);
+            field.setAttribute('aria-describedby', (error.id + ' ' + hint).trim());
         } else {
             error.hidden = true;
-            field.removeAttribute('aria-describedby');
+            if (hint) field.setAttribute('aria-describedby', hint);
+            else field.removeAttribute('aria-describedby');
         }
     }
 

@@ -36,7 +36,7 @@
     "location": "¿Dónde lo encontraste?",
     "location_placeholder": "Aeropuerto, hotel, calle…",
     "message": "Mensaje",
-    "message_placeholder": "Cualquier dato que me ayude a encontrarte",
+    "message_hint": "Cualquier dato que me ayude a encontrarte",
     "submit": "Enviar mensaje",
     "required": "Este campo es obligatorio",
     "sent": "¡Gracias! Tu mensaje se envió.",

@@ -16,7 +16,7 @@
     <title data-i18n="page.title">Found my luggage? · Contact Ori</title>
 
     <link rel="preload" href="fonts/assistant.woff" as="font" type="font/woff" crossorigin>
-    <link rel="stylesheet" href="style.css?v=20261015">
+    <link rel="stylesheet" href="style.css?v=20261016">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -105,8 +105,11 @@
                 </div>
                 <div class="field field--wide">
                     <label class="field__label" for="message" data-i18n="form.message">Message</label>
+                    <!-- A visible hint, not a placeholder: Safari misplaces right-to-left textarea
+                         placeholders when the page is zoomed, and hints stay readable while typing -->
+                    <p class="field__hint" id="message-hint" data-i18n="form.message_hint">Anything that helps me find you</p>
                     <textarea class="field__input field__input--area" id="message" name="message" rows="4"
-                              placeholder="Anything that helps me find you" data-i18n-placeholder="form.message_placeholder"></textarea>
+                              aria-describedby="message-hint"></textarea>
                 </div>
                 <!-- Spam trap: people never see or fill it -->
                 <input type="text" name="_gotcha" class="visually-hidden" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -129,6 +132,6 @@
         <a class="footer__link" href="https://github.com/OriAshkenazi/luggage-recovery" target="_blank" rel="noopener noreferrer" data-i18n="footer.github">View on GitHub</a>
     </footer>
 
-    <script src="script.js?v=20261015" defer></script>
+    <script src="script.js?v=20261016" defer></script>
 </body>
 </html>

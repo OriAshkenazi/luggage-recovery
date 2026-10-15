@@ -287,10 +287,11 @@ p { text-wrap: pretty; }
     color: var(--color-ink);
     font: 600 17px var(--font);
 }
-.field__input::placeholder { color: #6E6A61; opacity: 1; text-align: start; }
+.field__input::placeholder { color: #6E6A61; opacity: 1; }
 .field__input:focus { border-color: var(--color-ink); }
 .field__input--area { padding-block: 12px; line-height: 1.4; resize: vertical; }
 .field__input[aria-invalid="true"] { border-color: var(--color-error); }
+.field__hint { margin: 0; font-size: 15px; line-height: 1.4; color: var(--color-muted); }
 .field__error { margin: 0; font-size: 15px; font-weight: 700; color: var(--color-error); }
 
 .button {

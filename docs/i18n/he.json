@@ -36,7 +36,7 @@
     "location": "איפה מצאת אותה?",
     "location_placeholder": "שדה תעופה, מלון, רחוב…",
     "message": "הודעה",
-    "message_placeholder": "כל פרט שיעזור לי למצוא אותך",
+    "message_hint": "כל פרט שיעזור לי למצוא אותך",
     "submit": "שליחת הודעה",
     "required": "שדה חובה",
     "sent": "תודה! ההודעה נשלחה.",

@@ -36,7 +36,7 @@
     "location": "Où l’avez-vous trouvé ?",
     "location_placeholder": "Aéroport, hôtel, rue…",
     "message": "Message",
-    "message_placeholder": "Tout détail qui m’aide à vous retrouver",
+    "message_hint": "Tout détail qui m’aide à vous retrouver",
     "submit": "Envoyer le message",
     "required": "Ce champ est obligatoire",
     "sent": "Merci ! Votre message a été envoyé.",
