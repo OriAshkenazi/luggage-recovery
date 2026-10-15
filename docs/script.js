@@ -52,9 +52,18 @@
             var value = t(el.getAttribute('data-i18n-html'));
             if (value !== null) el.innerHTML = value;
         });
+        // Safari keeps a field's placeholder laid out for the direction it loaded with, so after
+        // switching to Hebrew or Arabic the text ran past the field's edge. Give each field its own
+        // dir and re-set the placeholder afterwards so it is laid out again.
+        $$('.field__input').forEach(function (el) {
+            el.dir = root.dir;
+        });
         $$('[data-i18n-placeholder]').forEach(function (el) {
             var value = t(el.getAttribute('data-i18n-placeholder'));
-            if (value !== null) el.setAttribute('placeholder', value);
+            if (value !== null) {
+                el.removeAttribute('placeholder');
+                el.setAttribute('placeholder', value);
+            }
         });
         $$('[data-i18n-aria]').forEach(function (el) {
             var value = t(el.getAttribute('data-i18n-aria'));
