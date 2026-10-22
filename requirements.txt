@@ -3,7 +3,7 @@ cadquery==2.5.2
 trimesh==4.7.4
 numpy==2.3.2
 shapely==2.1.1
-fonttools==4.59.1
+fonttools==4.60.2
 segno==1.6.1
 PyYAML==6.0.2
 rtree==1.4.1
